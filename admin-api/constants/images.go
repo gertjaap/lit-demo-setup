@@ -1,5 +1,12 @@
 package constants
 
+import (
+	"context"
+
+	"github.com/docker/docker/api/types"
+	"github.com/docker/docker/client"
+)
+
 type LitImage struct {
 	Name    string
 	ImageID string
@@ -8,10 +15,27 @@ type LitImage struct {
 var knownImages []LitImage
 
 func KnownImages() []LitImage {
-	if (len(knownImages)) == 0 {
-		knownImages = append(knownImages, LitImage{"Default", "sha256:2d6737a14c759c4d32b35187e6056430d5fc51592b1bd0d1b2713b85c853efbf"})
-	}
 	return knownImages
+}
+
+func InitImages(cli *client.Client) error {
+	res, err := cli.ImageList(context.Background(), types.ImageListOptions{All: true})
+	if err != nil {
+		return err
+	}
+
+	for _, r := range res {
+		for _, tag := range r.RepoTags {
+			if tag[:3] == "lit" {
+				name := "Default"
+				if tag != "lit:latest" {
+					name = tag[4:]
+				}
+				knownImages = append(knownImages, LitImage{ImageID: r.ID, Name: name})
+			}
+		}
+	}
+	return nil
 }
 
 func DefaultImage() LitImage {

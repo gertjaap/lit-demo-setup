@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"github.com/docker/docker/client"
+	"github.com/gertjaap/lit-demo-setup/admin-api/constants"
 	"github.com/gertjaap/lit-demo-setup/admin-api/docker"
 	"github.com/gertjaap/lit-demo-setup/admin-api/logging"
 	"github.com/gertjaap/lit-demo-setup/admin-api/routes"
@@ -35,6 +36,10 @@ func main() {
 	if err != nil {
 		panic(err)
 	}
+	err = constants.InitImages(cli)
+	if err != nil {
+		panic(err)
+	}
 	r := mux.NewRouter()
 	r.HandleFunc("/api/nodes/list", routes.ListNodesHandler)
 	r.HandleFunc("/api/nodes/new", routes.NewNodeHandler)
@@ -59,7 +64,12 @@ func main() {
 	originsOk := handlers.AllowedOrigins([]string{"*"})
 	methodsOk := handlers.AllowedMethods([]string{"GET", "HEAD", "POST", "PUT", "OPTIONS"})
 
-	logging.Info.Println("Listening on port 8000")
+	portString := os.Getenv("PORT")
+	if portString == "" {
+		portString = "8000"
+	}
 
-	logging.Error.Fatal(http.ListenAndServe(":8000", handlers.CORS(originsOk, headersOk, methodsOk)(logging.WebLoggingMiddleware(r))))
+	logging.Info.Println("Listening on port %s", portString)
+
+	logging.Error.Fatal(http.ListenAndServe(":"+portString, handlers.CORS(originsOk, headersOk, methodsOk)(logging.WebLoggingMiddleware(r))))
 }

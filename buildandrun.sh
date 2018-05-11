@@ -5,9 +5,11 @@ if [ ! -d "litwebui" ]; then
 fi
 
 cd admin-ui
+npm install
 npm run build
 rm -rf ../admin-api/static
-mv build ../admin-api/static 
+mv build ../admin-api
+mv ../admin-api/build ../admin-api/static 
 cd ..
 cp -r litwebui/build admin-api/static/
 mv admin-api/static/build admin-api/static/litwebui
