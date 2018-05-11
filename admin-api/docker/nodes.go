@@ -12,6 +12,7 @@ import (
 	"sync"
 
 	"github.com/gertjaap/lit-demo-setup/admin-api/constants"
+	"github.com/gertjaap/lit-demo-setup/admin-api/logging"
 	"github.com/gertjaap/lit-demo-setup/admin-api/models"
 
 	"github.com/docker/docker/api/types"
@@ -136,10 +137,13 @@ func DropLitNode(cli *client.Client, name string) error {
 	}
 
 	if containerToDrop.ID != "undefined" {
+		logging.Info.Println("Found container to drop, dropping...")
 		cli.ContainerRemove(context.Background(), containerToDrop.ID, types.ContainerRemoveOptions{Force: true})
+		return nil
 	}
 
-	return nil
+	logging.Error.Println("Container not found, returning error")
+	return fmt.Errorf("Invalid container %s", name)
 }
 
 func NewLitNode(cli *client.Client) (models.LitNode, error) {

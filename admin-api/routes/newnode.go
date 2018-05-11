@@ -35,6 +35,13 @@ func NewNodeHandler(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
+	err = litrpc.ImportOracle(rpcCon)
+	if err != nil {
+		logging.Error.Println(err)
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
 	docker.NodeAddresses[node.Name] = node.Address
 	node.Balances = map[uint32]int64{257: int64(0)}
 	js, err := json.Marshal(node)

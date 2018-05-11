@@ -8,6 +8,8 @@ import (
 )
 
 func GetAddressFromNode(rpcCon *rpc.Client) (string, error) {
+	res, _ := commands.Listen(rpcCon, ":2448") // call listen and ignore error
+
 	res, err := commands.GetListeningPorts(rpcCon)
 	if err != nil {
 		res, err = commands.Listen(rpcCon, ":2448")
