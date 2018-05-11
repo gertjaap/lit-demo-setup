@@ -1,0 +1,5 @@
+admin-api/data
+litwebui/
+admin-api/static
+admin-api/vendor/*/
+data/

@@ -1,0 +1,24 @@
+{
+  "name": "admin-ui",
+  "version": "0.1.0",
+  "private": true,
+  "dependencies": {
+    "@material-ui/icons": "^1.0.0-beta.43",
+    "ajv": "^6.4.0",
+    "copy-to-clipboard": "^3.0.8",
+    "date-fns": "^2.0.0-alpha.7",
+    "material-ui": "^1.0.0-beta.38",
+    "material-ui-icons": "^1.0.0-beta.36",
+    "material-ui-pickers": "^1.0.0-rc.7",
+    "react": "^16.3.2",
+    "react-dom": "^16.2.0",
+    "react-scripts": "1.1.1",
+    "react-spinners": "^0.3.2"
+  },
+  "scripts": {
+    "start": "react-scripts start",
+    "build": "react-scripts build",
+    "test": "react-scripts test --env=jsdom",
+    "eject": "react-scripts eject"
+  }
+}
