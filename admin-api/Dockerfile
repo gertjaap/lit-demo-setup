@@ -4,16 +4,10 @@ FROM golang:alpine as build
 RUN apk update && apk upgrade && \
     apk add --no-cache bash git openssh gcc musl-dev
 ENV GOROOT=/usr/local/go
-RUN go get github.com/gorilla/mux
-RUN go get github.com/gorilla/handlers
-RUN go get github.com/docker/docker/api/types
-RUN go get github.com/docker/docker/api/types/container
-RUN go get github.com/docker/docker/client
-RUN go get github.com/kardianos/govendor
-RUN rm -rf /usr/local/go/src/github.com/gertjaap/lit-demo-setup/admin-api
 COPY . /usr/local/go/src/github.com/gertjaap/lit-demo-setup/admin-api
 WORKDIR /usr/local/go/src/github.com/gertjaap/lit-demo-setup/admin-api
-RUN govendor fetch +missing
+RUN go get -v github.com/kardianos/govendor
+RUN govendor fetch +external +missing
 RUN go get -v ./...
 RUN go build
 

@@ -54,7 +54,7 @@ class App extends Component {
   }
 
   openLitUIForNode(node) {
-    window.open('/litwebui/?host=' + document.location.hostname + '&port=' + node.PublicRpcPort)
+    window.open('/api/redirecttolitwebui?host=' + document.location.hostname + '&port=' + node.PublicRpcPort)
   }
 
   dropNode(node) {
