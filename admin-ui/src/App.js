@@ -172,8 +172,8 @@ class App extends Component {
           
           <Grid key="New" item xs={12} sm={6}>
             {creation}
-            <Button disabled={this.state.IsCreating} variant="fab" color="primary" aria-label="add">
-              <AddIcon onClick={this.newNode.bind(this)} />
+            <Button onClick={this.newNode.bind(this)}  disabled={this.state.IsCreating} variant="fab" color="primary" aria-label="add">
+              <AddIcon />
             </Button>
           </Grid>
         </Grid>
@@ -184,7 +184,7 @@ class App extends Component {
 
   componentDidMount() {
     this.update();
-    setTimeout(() => {this.updateBlockHeight()}, 10000);
+    setInterval(() => {this.update()}, 10000);
   }
 }
 
