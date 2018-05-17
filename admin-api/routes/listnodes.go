@@ -33,6 +33,10 @@ func ListNodesHandler(w http.ResponseWriter, r *http.Request) {
 		nodes[i].Name = c.Names[0][1:]
 		rpcUrl := fmt.Sprintf("ws://%s:8001/ws", nodes[i].Name)
 		wsConn, rpcCon, err := litrpc.Connect(rpcUrl)
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
 		nodes[i].Balances, err = litrpc.GetBalancesFromNode(rpcCon)
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)

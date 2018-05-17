@@ -48,7 +48,7 @@ func main() {
 	r.HandleFunc("/api/chain/height", routes.BlockHeightHandler)
 	r.HandleFunc("/api/chain/mine", routes.MineBlockHandler)
 	r.HandleFunc("/api/redirecttowebui", routes.RedirectToWebUiHandler)
-	r.NotFoundHandler = http.FileServer(http.Dir("static"))
+	r.PathPrefix("/").Handler(http.FileServer(http.Dir("static")))
 
 	miner := time.NewTicker(30 * time.Second)
 	go func() {

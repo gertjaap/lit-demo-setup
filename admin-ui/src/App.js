@@ -54,7 +54,7 @@ class App extends Component {
   }
 
   openLitUIForNode(node) {
-    window.open('/api/redirecttolitwebui?host=' + document.location.hostname + '&port=' + node.PublicRpcPort)
+    window.open('/api/redirecttowebui?host=' + document.location.hostname + '&port=' + node.PublicRpcPort)
   }
 
   dropNode(node) {
@@ -72,9 +72,9 @@ class App extends Component {
     fetch("/api/nodes/new")
     .then(res => res.json())
     .then(res => {
-      var nodes = this.state.Nodes;
-      nodes.push(res);
-      this.setState({Nodes:nodes, IsCreating: false})
+    
+      this.setState({ IsCreating: false})
+      this.update();
     });
   }
 
