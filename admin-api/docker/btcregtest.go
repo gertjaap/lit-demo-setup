@@ -17,6 +17,8 @@ import (
 
 const BitcoindImageID = "sha256:b26af599c9eceb36145dc033d9782766397e13f6b987f5a0fa91e8e202ef8768"
 
+var BtcRegTestIP = ""
+
 func WriteBitcoinConf() error {
 	os.MkdirAll("/data/bitcoind", 0777)
 	confPath := path.Join("/data/bitcoind/bitcoin.conf")
@@ -33,20 +35,27 @@ func InitRegTest(cli *client.Client) error {
 	if err != nil {
 		return err
 	}
-
+	ipAddress := ""
 	found := false
 	for _, c := range containers {
 		correctNetwork := false
 		for _, n := range c.NetworkSettings.Networks {
 			if n.NetworkID == NetworkID {
 				correctNetwork = true
+				ipAddress = n.IPAddress
+				break
 			}
 		}
 		if !correctNetwork {
 			continue
 		}
 		if c.ImageID == BitcoindImageID {
-			found = true
+			for _, nm := range c.Names {
+				if nm == "/litbtcregtest" {
+					found = true
+					BtcRegTestIP = ipAddress
+				}
+			}
 		}
 	}
 

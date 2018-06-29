@@ -98,7 +98,7 @@ func BootstrapLitData(idx int) error {
 	if err != nil {
 		return err
 	}
-	conf := []byte("reg=litbtcregtest\nrpchost=0.0.0.0")
+	conf := []byte("reg=" + BtcRegTestIP + "\nrpchost=0.0.0.0")
 	err = ioutil.WriteFile(confPath, conf, 0666)
 	if err != nil {
 		return err

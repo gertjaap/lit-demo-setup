@@ -28,7 +28,7 @@ func FundNodeHandler(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
-	logging.Info.Printf("Funding [%s] with 1 BTC-r", addr)
+	logging.Info.Printf("Funding [%s] with 5 BTC-r", addr)
 
 	client, err := btc.GetRpcClient()
 	if err != nil {
@@ -44,7 +44,7 @@ func FundNodeHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	txHash, err := client.SendFrom("", btcAddr, btcutil.Amount(100000000))
+	txHash, err := client.SendFrom("", btcAddr, btcutil.Amount(500000000))
 	if err != nil {
 		logging.Error.Println(err)
 		http.Error(w, err.Error(), http.StatusInternalServerError)

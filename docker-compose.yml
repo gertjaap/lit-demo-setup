@@ -1,0 +1,53 @@
+version: "2"
+services:
+
+  bitcoind-main:
+    image: kylemanna/bitcoind
+    restart: always
+    expose:
+      - "8332"
+      - "8333"
+    volumes:
+      - ./data/regtest/main/coind:/bitcoin/.bitcoin
+    command: -rpcuser=middleware -rpcpassword=middleware -rpcallowip=0.0.0.0/0 -rpcport=8332 -regtest -txindex -addnode=litbtcregtest
+
+  blkidx-main:
+    image: blkidx
+    depends_on:
+      - bitcoind-main
+    restart: always
+    environment:
+      - COIND_HOST=bitcoind-main
+    expose:
+      - "8888"
+    volumes:
+      - ./data/regtest/main/coind/regtest/blocks:/blocks
+      - ./data/regtest/main/index:/index
+      - ./bitcoin-regtest.json:/coins/bitcoin-regtest.json
+    command: --coinParams=/coins/bitcoin-regtest.json
+
+  blkidx-insight-ui:
+    image: blkidx-insight-ui
+    depends_on:
+      - blkidx-main
+      - blkidx-insight
+    restart: always
+    expose:
+      - "80"
+
+  blkidx-insight:
+    image: blkidx-insight
+    depends_on:
+      - blkidx-main
+    restart: always
+    expose: 
+      - "3000"
+    environment:
+      - INSIGHTWRAPPER_BACKENDBASEURL=http://blkidx-main:8888/
+
+
+networks:
+  default:
+    external:
+      name: lit-demo
+

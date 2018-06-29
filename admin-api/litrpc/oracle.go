@@ -8,7 +8,7 @@ import (
 )
 
 func ImportOracle(rpcCon *rpc.Client) error {
-	_, err := commands.ImportOracle(rpcCon, "https://oracle.gertjaap.org/", "Demo Oracle")
+	_, err := commands.ImportOracle(rpcCon, "http://litoracle:3000/", "LIT Oracle")
 	if err != nil {
 
 		logging.Error.Println(err)

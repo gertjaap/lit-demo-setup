@@ -61,10 +61,10 @@ class App extends Component {
         </AppBar>
         <Grid container spacing={24}>
           <Grid xs={6}>
-          <iframe title="Node 1" style={{width:'100%', height:'900px'}} src="/api/redirecttowebui?host=localhost&port=51001"></iframe>
+          <iframe title="Node 1" style={{width:'100%', border:'0px', borderRight:'4px solid black', overflow:'hidden', height:'800px'}} src="/api/redirecttowebui?host=localhost&port=51001"></iframe>
           </Grid>
           <Grid xs={6}>
-          <iframe title="Node 2" style={{width:'100%', height:'900px'}} src="/api/redirecttowebui?host=localhost&port=51002&alternative=1"></iframe>
+          <iframe title="Node 2" style={{width:'100%', border:'0px',overflow:'hidden', height:'800px'}} src="/api/redirecttowebui?host=localhost&port=51002&alternative=1"></iframe>
           </Grid>
         </Grid>
       </div>
