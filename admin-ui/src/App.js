@@ -54,7 +54,7 @@ class App extends Component {
   }
 
   openLitUIForNode(node) {
-    window.open('/litwebui/?host=' + document.location.hostname + '&port=' + node.PublicRpcPort)
+    window.open('/api/redirecttowebui?host=' + document.location.hostname + '&port=' + node.PublicRpcPort)
   }
 
   dropNode(node) {
@@ -72,9 +72,9 @@ class App extends Component {
     fetch("/api/nodes/new")
     .then(res => res.json())
     .then(res => {
-      var nodes = this.state.Nodes;
-      nodes.push(res);
-      this.setState({Nodes:nodes, IsCreating: false})
+    
+      this.setState({ IsCreating: false})
+      this.update();
     });
   }
 
@@ -177,8 +177,8 @@ class App extends Component {
           
           <Grid key="New" item xs={12} sm={6}>
             {creation}
-            <Button disabled={this.state.IsCreating} variant="fab" color="primary" aria-label="add">
-              <AddIcon onClick={this.newNode.bind(this)} />
+            <Button onClick={this.newNode.bind(this)}  disabled={this.state.IsCreating} variant="fab" color="primary" aria-label="add">
+              <AddIcon />
             </Button>
           </Grid>
         </Grid>
@@ -189,7 +189,7 @@ class App extends Component {
 
   componentDidMount() {
     this.update();
-    setTimeout(() => {this.updateBlockHeight()}, 10000);
+    setInterval(() => {this.update()}, 10000);
   }
 }
 

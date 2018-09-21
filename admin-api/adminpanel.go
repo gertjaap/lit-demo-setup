@@ -27,7 +27,7 @@ func main() {
 		panic(err)
 	}
 	defer cli.Close()
-	err = docker.SetLitImage(cli)
+	err = constants.InitImages(cli)
 	if err != nil {
 		panic(err)
 	}
@@ -56,7 +56,8 @@ func main() {
 	r.HandleFunc("/api/nodes/fund/{id}", routes.FundNodeHandler)
 	r.HandleFunc("/api/chain/height", routes.BlockHeightHandler)
 	r.HandleFunc("/api/chain/mine", routes.MineBlockHandler)
-	r.PathPrefix("/").Handler(http.StripPrefix("/", http.FileServer(http.Dir("static"))))
+	r.HandleFunc("/api/redirecttowebui", routes.RedirectToWebUiHandler)
+	r.PathPrefix("/").Handler(http.FileServer(http.Dir("static")))
 
 	miner := time.NewTicker(30 * time.Second)
 	go func() {
@@ -76,7 +77,12 @@ func main() {
 	originsOk := handlers.AllowedOrigins([]string{"*"})
 	methodsOk := handlers.AllowedMethods([]string{"GET", "HEAD", "POST", "PUT", "OPTIONS"})
 
-	logging.Info.Println("Listening on port 8000")
+	portString := os.Getenv("PORT")
+	if portString == "" {
+		portString = "8000"
+	}
 
-	logging.Error.Fatal(http.ListenAndServe(":8000", handlers.CORS(originsOk, headersOk, methodsOk)(logging.WebLoggingMiddleware(r))))
+	logging.Info.Println("Listening on port %s", portString)
+
+	logging.Error.Fatal(http.ListenAndServe(":"+portString, handlers.CORS(originsOk, headersOk, methodsOk)(logging.WebLoggingMiddleware(r))))
 }
