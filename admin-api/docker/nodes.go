@@ -32,28 +32,6 @@ import (
 var NodeAddresses = map[string]string{}
 var creationMutex sync.Mutex
 
-func SetLitImage(cli *client.Client) error {
-	images, err := cli.ImageList(context.Background(), types.ImageListOptions{All: true})
-	if err != nil {
-		return err
-	}
-
-	found := false
-	for _, i := range images {
-		for _, t := range i.RepoTags {
-			if t == "lit:latest" {
-				constants.SetDefaultImage(i.ID)
-				found = true
-			}
-		}
-	}
-
-	if !found {
-		return fmt.Errorf("Could not find image tagged 'lit:latest'")
-	}
-	return nil
-}
-
 func LitNodes(cli *client.Client) ([]types.Container, error) {
 	filteredContainers := []types.Container{}
 

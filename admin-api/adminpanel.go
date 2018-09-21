@@ -53,7 +53,6 @@ func main() {
 	r.HandleFunc("/api/nodes/list", routes.ListNodesHandler)
 	r.HandleFunc("/api/nodes/new", routes.NewNodeHandler)
 	r.HandleFunc("/api/nodes/delete/{id}", routes.DeleteNodeHandler)
-	r.HandleFunc("/api/nodes/fund/{id}", routes.FundNodeHandler)
 	r.HandleFunc("/api/chain/height", routes.BlockHeightHandler)
 	r.HandleFunc("/api/chain/mine", routes.MineBlockHandler)
 	r.HandleFunc("/api/redirecttowebui", routes.RedirectToWebUiHandler)

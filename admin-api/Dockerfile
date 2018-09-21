@@ -10,7 +10,7 @@ WORKDIR /usr/local/go/src/github.com/gertjaap/lit-demo-setup/admin-api
 RUN govendor fetch +external +missing
 COPY . /usr/local/go/src/github.com/gertjaap/lit-demo-setup/admin-api
 WORKDIR /usr/local/go/src/github.com/gertjaap/lit-demo-setup/admin-api
-RUN govendor fetch +external +missing
+RUN govendor fetch +missing
 RUN go get -v ./...
 RUN go build
 

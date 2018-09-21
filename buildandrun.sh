@@ -2,6 +2,7 @@
 set +e
 docker stop lit-demo-adminpanel
 docker rm lit-demo-adminpanel
+
 set -e
 
 cd admin-ui
