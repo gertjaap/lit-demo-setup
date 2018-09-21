@@ -1,13 +1,12 @@
 package litrpc
 
 import (
-	"net/rpc"
-
+	"github.com/gertjaap/lit-demo-setup/admin-api/commands"
 	"github.com/gertjaap/lit-demo-setup/admin-api/logging"
-	"github.com/gertjaap/lit-docker-tester/commands"
+	"github.com/mit-dci/lit/litrpc"
 )
 
-func GetBalancesFromNode(rpcCon *rpc.Client) (map[uint32]int64, error) {
+func GetBalancesFromNode(rpcCon *litrpc.LndcRpcClient) (map[uint32]int64, error) {
 	returnVal := map[uint32]int64{}
 	res, err := commands.GetBalance(rpcCon)
 	if err != nil {

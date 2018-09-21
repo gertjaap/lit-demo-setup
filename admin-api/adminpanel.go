@@ -6,10 +6,10 @@ import (
 	"time"
 
 	"github.com/docker/docker/client"
+	"github.com/gertjaap/lit-demo-setup/admin-api/coindaemon"
 	"github.com/gertjaap/lit-demo-setup/admin-api/docker"
 	"github.com/gertjaap/lit-demo-setup/admin-api/logging"
 	"github.com/gertjaap/lit-demo-setup/admin-api/routes"
-	"github.com/gertjaap/lit-docker-tester/btc"
 
 	"github.com/gorilla/handlers"
 	"github.com/gorilla/mux"
@@ -27,14 +27,28 @@ func main() {
 		panic(err)
 	}
 	defer cli.Close()
+	err = docker.SetLitImage(cli)
+	if err != nil {
+		panic(err)
+	}
+
 	err = docker.InitNetwork(cli)
 	if err != nil {
 		panic(err)
 	}
-	err = docker.InitRegTest(cli)
+	err = docker.InitCoinDaemons(cli)
 	if err != nil {
 		panic(err)
 	}
+	err = docker.InitLitTracker(cli)
+	if err != nil {
+		panic(err)
+	}
+	err = docker.InitBigFatNode(cli)
+	if err != nil {
+		panic(err)
+	}
+
 	r := mux.NewRouter()
 	r.HandleFunc("/api/nodes/list", routes.ListNodesHandler)
 	r.HandleFunc("/api/nodes/new", routes.NewNodeHandler)
@@ -47,10 +61,13 @@ func main() {
 	miner := time.NewTicker(30 * time.Second)
 	go func() {
 		for range miner.C {
-			err := btc.MineBlocks(1)
-			if err != nil {
-				logging.Error.Println("Could not mine block:", err)
+			for _, cd := range coindaemon.CoinDaemons {
+				err := cd.MineBlocks(1)
+				if err != nil {
+					logging.Error.Printf("Could not mine block on %s: %s\n", cd.ContainerName, err)
+				}
 			}
+
 		}
 	}()
 

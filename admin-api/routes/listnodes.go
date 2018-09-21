@@ -2,7 +2,6 @@ package routes
 
 import (
 	"encoding/json"
-	"fmt"
 	"net/http"
 
 	"github.com/docker/docker/client"
@@ -31,37 +30,29 @@ func ListNodesHandler(w http.ResponseWriter, r *http.Request) {
 
 	for i, c := range containers {
 		nodes[i].Name = c.Names[0][1:]
-		rpcUrl := fmt.Sprintf("ws://%s:8001/ws", nodes[i].Name)
-		wsConn, rpcCon, err := litrpc.Connect(rpcUrl)
+		rpcCon, err := docker.GetLndcRpc(cli, nodes[i].Name)
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
 		nodes[i].Balances, err = litrpc.GetBalancesFromNode(rpcCon)
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
 		}
 
-		if val, ok := docker.NodeAddresses[nodes[i].Name]; ok {
-			nodes[i].Address = val
-		} else {
-			if err == nil {
-				defer wsConn.Close()
-				nodes[i].Address, err = litrpc.GetAddressFromNode(rpcCon)
-				if err != nil {
-					http.Error(w, err.Error(), http.StatusInternalServerError)
-					return
-				}
-				docker.NodeAddresses[nodes[i].Name] = nodes[i].Address
-			} else {
+		if _, ok := docker.NodeAddresses[nodes[i].Name]; !ok {
+			docker.NodeAddresses[nodes[i].Name], err = docker.GetAddress(cli, nodes[i].Name)
+			if err != nil {
 				http.Error(w, err.Error(), http.StatusInternalServerError)
 				return
 			}
 		}
+		nodes[i].Address = docker.NodeAddresses[nodes[i].Name]
 
 		for _, p := range c.Ports {
 			if p.PrivatePort == 2448 {
 				nodes[i].PublicLitPort = int(p.PublicPort)
-			}
-			if p.PrivatePort == 8001 {
-				nodes[i].PublicRpcPort = int(p.PublicPort)
 			}
 		}
 	}

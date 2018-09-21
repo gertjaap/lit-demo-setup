@@ -9,9 +9,13 @@ var knownImages []LitImage
 
 func KnownImages() []LitImage {
 	if (len(knownImages)) == 0 {
-		knownImages = append(knownImages, LitImage{"Default", "sha256:2d6737a14c759c4d32b35187e6056430d5fc51592b1bd0d1b2713b85c853efbf"})
+		//knownImages = append(knownImages, LitImage{"Default", "sha256:eda4b2e362fe90ce8da6fd3e8202b316b84013e2176b91989129257d60d05ac5"})
 	}
 	return knownImages
+}
+
+func SetDefaultImage(id string) {
+	knownImages = append(knownImages, LitImage{"Default", id})
 }
 
 func DefaultImage() LitImage {

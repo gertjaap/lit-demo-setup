@@ -4,22 +4,29 @@ import (
 	"encoding/json"
 	"net/http"
 
-	"github.com/gertjaap/lit-docker-tester/btc"
+	"github.com/gertjaap/lit-demo-setup/admin-api/coindaemon"
 )
 
 func BlockHeightHandler(w http.ResponseWriter, r *http.Request) {
-	cli, err := btc.GetRpcClient()
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return
+	result := map[string]int64{}
+
+	for _, cd := range coindaemon.CoinDaemons {
+		cli, err := coindaemon.GetRpcClient(cd)
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+
+		blocks, err := cli.GetBlockCount()
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+
+		result[cd.DataSubFolderOnHost] = blocks
 	}
 
-	blocks, err := cli.GetBlockCount()
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return
-	}
-	js, err := json.Marshal(blocks)
+	js, err := json.Marshal(result)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return

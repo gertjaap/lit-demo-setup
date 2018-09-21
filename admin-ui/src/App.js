@@ -32,7 +32,7 @@ class App extends Component {
     this.state = {
       IsDropping: "",
       Nodes: [],
-      BlockHeight: 0,
+      BlockHeights: {},
       IsCreating: false
     };
   }
@@ -41,7 +41,7 @@ class App extends Component {
     fetch("/api/chain/height")
     .then(res => res.json())
     .then(res => {
-      this.setState({BlockHeight:res});
+      this.setState({BlockHeights:res});
     })
   }
 
@@ -114,13 +114,18 @@ class App extends Component {
         </Typography>
       </Grid> )
     }
+
+    var blockHeights = Object.keys(this.state.BlockHeights).map((k) => {
+      return " [" + k + ": " + this.state.BlockHeights[k] + "]";
+    });
+
     return (
       <div className="App">
         <CssBaseline />
         <AppBar position="static">
           <Toolbar>
             <Typography variant="title" color="inherit">
-              LIT Demo Environment - Blockheight: {this.state.BlockHeight}
+              LIT Demo Environment - {blockHeights}
             </Typography>
             <IconButton onClick={() => this.mineBlock()} aria-label="Mine">
                       <GavelIcon />

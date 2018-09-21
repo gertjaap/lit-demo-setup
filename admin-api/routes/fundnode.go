@@ -2,35 +2,53 @@ package routes
 
 import (
 	"encoding/json"
-	"fmt"
 	"net/http"
 
-	"github.com/gertjaap/lit-demo-setup/admin-api/litrpc"
+	"github.com/docker/docker/client"
+	"github.com/gertjaap/lit-demo-setup/admin-api/commands"
+	"github.com/gertjaap/lit-demo-setup/admin-api/docker"
 	"github.com/gertjaap/lit-demo-setup/admin-api/logging"
-	"github.com/gertjaap/lit-docker-tester/btc"
 	"github.com/gorilla/mux"
 )
 
 func FundNodeHandler(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
-	rpcUrl := fmt.Sprintf("ws://%s:8001/ws", vars["id"])
-	wsConn, rpcCon, err := litrpc.Connect(rpcUrl)
+	cli, err := client.NewEnvClient()
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
-	defer wsConn.Close()
-	addr, err := litrpc.GetBlockchainAddress(rpcCon)
+	defer cli.Close()
+	rpcCon, err := docker.GetLndcRpc(cli, vars["id"])
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
-	logging.Info.Printf("Funding [%s] with 1 BTC-r", addr)
-	err = btc.SendCoins(addr, 100000000) // 1 BTC-r
+
+	addr, err := commands.GetAddresses(rpcCon)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
+
+	for _, adr := range addr.WitAddresses {
+		logging.Info.Printf("Found address: %s\n", adr)
+	}
+	/*
+		// Send it a bunch each coin
+		for _, cd := range coindaemon.CoinDaemons {
+			rpc, err := coindaemon.GetRpcClient(cd)
+			rpc.send
+
+		}
+
+		logging.Info.Printf("Funding [%s] with 1 BTC-r", addr)
+		err = btc.SendCoins(addr.WitAddresses, 100000000) // 1 BTC-r
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}*/
+
 	js, err := json.Marshal(true)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
