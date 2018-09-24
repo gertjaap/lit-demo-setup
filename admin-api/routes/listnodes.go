@@ -7,6 +7,7 @@ import (
 	"github.com/docker/docker/client"
 	"github.com/gertjaap/lit-demo-setup/admin-api/docker"
 	"github.com/gertjaap/lit-demo-setup/admin-api/litrpc"
+	"github.com/gertjaap/lit-demo-setup/admin-api/logging"
 
 	"github.com/gertjaap/lit-demo-setup/admin-api/models"
 )
@@ -14,12 +15,14 @@ import (
 func ListNodesHandler(w http.ResponseWriter, r *http.Request) {
 	cli, err := client.NewEnvClient()
 	if err != nil {
+		logging.Error.Printf("ListNodesHandler NewEnvClient error: %s", err.Error())
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 	defer cli.Close()
 	containers, err := docker.LitNodes(cli)
 	if err != nil {
+		logging.Error.Printf("ListNodesHandler LitNodes error: %s", err.Error())
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
@@ -32,11 +35,13 @@ func ListNodesHandler(w http.ResponseWriter, r *http.Request) {
 		nodes[i].Name = c.Names[0][1:]
 		rpcCon, err := docker.GetLndcRpc(cli, nodes[i].Name)
 		if err != nil {
+			logging.Error.Printf("ListNodesHandler GetLndcRpc error: %s", err.Error())
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
 		}
 		nodes[i].Balances, err = litrpc.GetBalancesFromNode(rpcCon)
 		if err != nil {
+			logging.Error.Printf("ListNodesHandler GetBalancesFromNode error: %s", err.Error())
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
 		}
@@ -44,6 +49,7 @@ func ListNodesHandler(w http.ResponseWriter, r *http.Request) {
 		if _, ok := docker.NodeAddresses[nodes[i].Name]; !ok {
 			docker.NodeAddresses[nodes[i].Name], err = docker.GetAddress(cli, nodes[i].Name)
 			if err != nil {
+				logging.Error.Printf("ListNodesHandler GetAddress error: %s", err.Error())
 				http.Error(w, err.Error(), http.StatusInternalServerError)
 				return
 			}
@@ -59,6 +65,7 @@ func ListNodesHandler(w http.ResponseWriter, r *http.Request) {
 
 	js, err := json.Marshal(nodes)
 	if err != nil {
+		logging.Error.Printf("ListNodesHandler json.Marshal error: %s", err.Error())
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}

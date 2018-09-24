@@ -2,8 +2,10 @@ package docker
 
 import (
 	"context"
+	"fmt"
 	"strings"
 	"sync"
+	"time"
 
 	"github.com/gertjaap/lit-demo-setup/admin-api/coindaemon"
 	"github.com/mit-dci/lit/litrpc"
@@ -92,7 +94,7 @@ func ConnectBFNToNode(rpcClient *litrpc.LndcRpcClient, node string) (uint32, err
 		return 0, err
 	}
 
-	_, err = commands.Connect(rpcClient, NodeAddresses[node])
+	_, err = commands.Connect(rpcClient, fmt.Sprintf("%s@%s:2448", NodeAddresses[node], node))
 	if err != nil {
 		return 0, err
 	}
@@ -119,4 +121,43 @@ func ConnectBFNToNode(rpcClient *litrpc.LndcRpcClient, node string) (uint32, err
 	bfnConnectMutex.Unlock()
 
 	return returnVal, nil
+}
+
+func ConnectAndFund(cli *client.Client, nodeName string) error {
+	logging.Info.Printf("Connecting new lit node %s to the big fat node...\n", nodeName)
+
+	time.Sleep(time.Second * 2)
+
+	// Connect to the node (this will block until it's available - since it has to sync blocks and stuff)
+	lndc, err := GetLndcRpc(cli, nodeName)
+	if err != nil {
+		logging.Error.Printf("Error connecting to new node %s: %s\n", nodeName, err.Error())
+		return err
+	}
+
+	//lndc.Close()
+
+	rpcClient, err := GetLndcRpc(cli, "litdemobigfatnode")
+	if err != nil {
+		logging.Error.Printf("Error connecting to BFN: %s\n", err.Error())
+		return err
+	}
+
+	// Connect the BFN to the new node
+	peerIdx, err := ConnectBFNToNode(rpcClient, nodeName)
+	if err != nil {
+		logging.Error.Printf("Error connecting new node to BFN: %s\n", err.Error())
+		return err
+	}
+
+	for _, cd := range coindaemon.CoinDaemons {
+		logging.Info.Printf("Funding %s with %s\n", nodeName, cd.ContainerName)
+		reply, err := commands.Fund(rpcClient, peerIdx, cd.LitCoinType, 4000000000, 500000000)
+		if err != nil {
+			return err
+		}
+		logging.Info.Printf("Funded %s - %s\n", cd.ContainerName, reply.Status)
+	}
+
+	return nil
 }

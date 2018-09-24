@@ -26,7 +26,7 @@ func InitImages(cli *client.Client) error {
 
 	for _, r := range res {
 		for _, tag := range r.RepoTags {
-			if tag[:3] == "lit" {
+			if tag[:4] == "lit:" {
 				name := "Default"
 				if tag != "lit:latest" {
 					name = tag[4:]

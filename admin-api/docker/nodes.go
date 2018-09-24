@@ -213,8 +213,10 @@ func GetAddress(cli *client.Client, name string) (string, error) {
 func GetLndcRpc(cli *client.Client, name string) (*litrpc.LndcRpcClient, error) {
 	dataDir, err := GetLitNodeDataDir(cli, name)
 	if err != nil {
+		logging.Error.Printf("Error fetching datadir for %s: %s\n", name, err.Error())
 		return nil, err
 	}
+	logging.Info.Printf("Data dir for %s: %s\n", name, dataDir)
 	return NewLndcFromHostNameAndDataDir(name, dataDir)
 }
 
@@ -222,10 +224,12 @@ func NewLndcFromHostNameAndDataDir(hostName, dataDir string) (*litrpc.LndcRpcCli
 	keyFilePath := filepath.Join(dataDir, "privkey.hex")
 	privKey, err := lnutil.ReadKeyFile(keyFilePath)
 	if err != nil {
+		logging.Error.Printf("NewLndcFromHostNameAndDataDir error in ReadKeyFile %s\n", err.Error())
 		return nil, err
 	}
 	rootPrivKey, err := hdkeychain.NewMaster(privKey[:], &coinparam.TestNet3Params)
 	if err != nil {
+		logging.Error.Printf("NewLndcFromHostNameAndDataDir error in hdkeychain.NewMaster %s\n", err.Error())
 		return nil, err
 	}
 
@@ -238,12 +242,14 @@ func NewLndcFromHostNameAndDataDir(hostName, dataDir string) (*litrpc.LndcRpcCli
 	kg.Step[4] = 0 | 1<<31
 	key, err := kg.DerivePrivateKey(rootPrivKey)
 	if err != nil {
+		logging.Error.Printf("NewLndcFromHostNameAndDataDir error in DerivePrivateKey %s\n", err.Error())
 		return nil, err
 	}
 
 	kg.Step[3] = 0 | 1<<31
 	localIDPriv, err := kg.DerivePrivateKey(rootPrivKey)
 	if err != nil {
+		logging.Error.Printf("NewLndcFromHostNameAndDataDir error in DerivePrivateKey %s\n", err.Error())
 		logging.Error.Printf(err.Error())
 	}
 	var localIDPub [33]byte
@@ -257,6 +263,7 @@ func NewLndcFromHostNameAndDataDir(hostName, dataDir string) (*litrpc.LndcRpcCli
 	for true {
 		ret, err = litrpc.NewLndcRpcClient(adr, key)
 		if err != nil {
+			logging.Info.Printf("Error connecting to %s: %s, retrying %d more times\n", adr, err.Error(), 10-retries)
 			retries++
 			if retries > 10 {
 				return nil, err
