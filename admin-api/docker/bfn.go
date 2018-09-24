@@ -129,7 +129,7 @@ func ConnectAndFund(cli *client.Client, nodeName string) error {
 	time.Sleep(time.Second * 2)
 
 	// Connect to the node (this will block until it's available - since it has to sync blocks and stuff)
-	lndc, err := GetLndcRpc(cli, nodeName)
+	_, err := GetLndcRpc(cli, nodeName)
 	if err != nil {
 		logging.Error.Printf("Error connecting to new node %s: %s\n", nodeName, err.Error())
 		return err
