@@ -4,14 +4,14 @@ import (
 	"encoding/json"
 	"net/http"
 
-	"github.com/gertjaap/lit-demo-setup/admin-api/coindaemon"
+	"github.com/gertjaap/lit-demo-setup/admin-api/coindaemons"
 )
 
 func BlockHeightHandler(w http.ResponseWriter, r *http.Request) {
 	result := map[string]int64{}
 
-	for _, cd := range coindaemon.CoinDaemons {
-		cli, err := coindaemon.GetRpcClient(cd)
+	for _, cd := range coindaemons.CoinDaemons {
+		cli, err := coindaemons.GetRpcClient(cd)
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return

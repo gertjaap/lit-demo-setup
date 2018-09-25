@@ -1,4 +1,4 @@
-package coindaemon
+package coindaemons
 
 import (
 	"fmt"

@@ -18,7 +18,7 @@ import (
 	"github.com/docker/docker/api/types/container"
 	"github.com/docker/docker/client"
 	"github.com/docker/go-connections/nat"
-	"github.com/gertjaap/lit-demo-setup/admin-api/coindaemon"
+	"github.com/gertjaap/lit-demo-setup/admin-api/coindaemons"
 	"github.com/gertjaap/lit-demo-setup/admin-api/constants"
 	"github.com/gertjaap/lit-demo-setup/admin-api/logging"
 	"github.com/gertjaap/lit-demo-setup/admin-api/models"
@@ -71,7 +71,7 @@ func GetAdminPanelContainer(cli *client.Client) (types.Container, error) {
 
 	for _, c := range containers {
 		for _, n := range c.Names {
-			if n == "/lit-demo-adminpanel" {
+			if n == "/litdemoadminpanel" {
 				return c, nil
 			}
 		}
@@ -109,7 +109,7 @@ func BootstrapLitData(idx int) error {
 
 	configString := ""
 
-	for _, cd := range coindaemon.CoinDaemons {
+	for _, cd := range coindaemons.CoinDaemons {
 		configString += fmt.Sprintf("%s=%s:%d\n", cd.LitConfigPrefix, cd.ContainerName, cd.P2PPort)
 	}
 
@@ -121,6 +121,15 @@ func BootstrapLitData(idx int) error {
 	if err != nil {
 		return err
 	}
+
+	// Write the rates.json file. We use 1 BTC = 112 LTC, 118 LTC = 1 BTC, 1 BTC = 6295 USD, 6495 USD = 1 BTC, 1 LTC = 52 USD, 58 USD = 1 LTC
+	rates := []byte("{\"257\": [{\"CoinType\": 257,	\"Rate\": 1, \"Reciprocal\": false},{\"CoinType\": 258,	\"Rate\": 118, \"Reciprocal\": true},{\"CoinType\": 262,	\"Rate\": 6495, \"Reciprocal\": true}],\"258\": [{\"CoinType\": 258,	\"Rate\": 1, \"Reciprocal\": false},{\"CoinType\": 257,	\"Rate\": 112, \"Reciprocal\": false},{\"CoinType\": 262,	\"Rate\": 58, \"Reciprocal\": true}],\"262\": [{\"CoinType\": 262,	\"Rate\": 1, \"Reciprocal\": false},{\"CoinType\": 257,	\"Rate\": 6295, \"Reciprocal\": false},{\"CoinType\": 258,	\"Rate\": 52, \"Reciprocal\": false}]}")
+	ratesPath := path.Join(litPath, "rates.json")
+	err = ioutil.WriteFile(ratesPath, rates, 0666)
+	if err != nil {
+		return err
+	}
+
 	return nil
 }
 

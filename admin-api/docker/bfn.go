@@ -7,11 +7,11 @@ import (
 	"sync"
 	"time"
 
-	"github.com/gertjaap/lit-demo-setup/admin-api/coindaemon"
 	"github.com/mit-dci/lit/litrpc"
 
 	"github.com/docker/docker/api/types"
 	"github.com/docker/docker/client"
+	"github.com/gertjaap/lit-demo-setup/admin-api/coindaemons"
 	"github.com/gertjaap/lit-demo-setup/admin-api/commands"
 	"github.com/gertjaap/lit-demo-setup/admin-api/logging"
 )
@@ -69,7 +69,7 @@ func InitBigFatNode(cli *client.Client) error {
 
 		for _, adr := range addrs.WitAddresses {
 			logging.Info.Printf("Funding on %s\n", adr)
-			for _, cd := range coindaemon.CoinDaemons {
+			for _, cd := range coindaemons.CoinDaemons {
 				if strings.HasPrefix(adr, cd.CoinParams.Bech32Prefix) {
 					// Send 50 transactions of 100 coins of each
 					for i := 0; i < 50; i++ {
@@ -81,6 +81,11 @@ func InitBigFatNode(cli *client.Client) error {
 
 				}
 			}
+		}
+
+		// Mine a few blocks to confirm new funds
+		for i := 0; i < 10; i++ {
+			coindaemons.MineBlock()
 		}
 	}
 	return nil
@@ -150,13 +155,19 @@ func ConnectAndFund(cli *client.Client, nodeName string) error {
 		return err
 	}
 
-	for _, cd := range coindaemon.CoinDaemons {
+	for _, cd := range coindaemons.CoinDaemons {
 		logging.Info.Printf("Funding %s with %s\n", nodeName, cd.ContainerName)
 		reply, err := commands.Fund(rpcClient, peerIdx, cd.LitCoinType, 4000000000, 500000000)
 		if err != nil {
 			return err
 		}
 		logging.Info.Printf("Funded %s - %s\n", cd.ContainerName, reply.Status)
+	}
+
+	logging.Info.Println("Funding done - mining block")
+	err = coindaemons.MineBlock()
+	if err != nil {
+		return err
 	}
 
 	return nil

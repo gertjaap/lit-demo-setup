@@ -10,11 +10,11 @@ import (
 	"github.com/docker/docker/api/types"
 	"github.com/docker/docker/api/types/container"
 	"github.com/docker/docker/client"
-	"github.com/gertjaap/lit-demo-setup/admin-api/coindaemon"
+	"github.com/gertjaap/lit-demo-setup/admin-api/coindaemons"
 	"github.com/gertjaap/lit-demo-setup/admin-api/logging"
 )
 
-func WriteConf(coinDaemon coindaemon.CoinDaemon) error {
+func WriteConf(coinDaemon coindaemons.CoinDaemon) error {
 	confDir := path.Join("/data", coinDaemon.DataSubFolderOnHost)
 	os.MkdirAll(confDir, 0777)
 	confPath := path.Join(confDir, coinDaemon.ConfigName)
@@ -32,7 +32,7 @@ func InitCoinDaemons(cli *client.Client) error {
 		return err
 	}
 
-	for _, cd := range coindaemon.CoinDaemons {
+	for _, cd := range coindaemons.CoinDaemons {
 		logging.Info.Printf("Checking if coin daemon %s is running\n", cd.ContainerName)
 		found := false
 		for _, c := range containers {

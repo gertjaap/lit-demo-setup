@@ -6,12 +6,11 @@ import (
 	"time"
 
 	"github.com/docker/docker/client"
-	"github.com/gertjaap/lit-demo-setup/admin-api/coindaemon"
+	"github.com/gertjaap/lit-demo-setup/admin-api/coindaemons"
 	"github.com/gertjaap/lit-demo-setup/admin-api/constants"
 	"github.com/gertjaap/lit-demo-setup/admin-api/docker"
 	"github.com/gertjaap/lit-demo-setup/admin-api/logging"
 	"github.com/gertjaap/lit-demo-setup/admin-api/routes"
-
 	"github.com/gorilla/handlers"
 	"github.com/gorilla/mux"
 )
@@ -62,7 +61,7 @@ func main() {
 	miner := time.NewTicker(30 * time.Second)
 	go func() {
 		for range miner.C {
-			for _, cd := range coindaemon.CoinDaemons {
+			for _, cd := range coindaemons.CoinDaemons {
 				err := cd.MineBlocks(1)
 				if err != nil {
 					logging.Error.Printf("Could not mine block on %s: %s\n", cd.ContainerName, err)
@@ -88,7 +87,7 @@ func main() {
 		panic(err)
 	}
 
-	for i := len(containers); i < 100; i++ {
+	for i := len(containers); i < 10; i++ {
 		logging.Info.Printf("Creating lit node %d\n", i)
 		err = MakeNewNode(cli)
 		if err != nil {

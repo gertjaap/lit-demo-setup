@@ -1,4 +1,4 @@
-package coindaemon
+package coindaemons
 
 import "github.com/mit-dci/lit/btcutil/chaincfg"
 
