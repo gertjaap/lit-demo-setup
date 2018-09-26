@@ -99,9 +99,15 @@ func ConnectBFNToNode(rpcClient *litrpc.LndcRpcClient, node string) (uint32, err
 		return 0, err
 	}
 
-	_, err = commands.Connect(rpcClient, fmt.Sprintf("%s@%s:2448", NodeAddresses[node], node))
-	if err != nil {
-		return 0, err
+	retries := 0
+	for {
+		_, err = commands.Connect(rpcClient, fmt.Sprintf("%s@%s:2448", NodeAddresses[node], node))
+		if err != nil {
+			retries++
+		}
+		if err != nil && retries > 5 {
+			return 0, err
+		}
 	}
 
 	conns2, err := commands.ListConnections(rpcClient)

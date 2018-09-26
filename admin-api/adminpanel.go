@@ -3,6 +3,7 @@ package main
 import (
 	"net/http"
 	"os"
+	"strconv"
 	"time"
 
 	"github.com/docker/docker/client"
@@ -86,8 +87,12 @@ func main() {
 	if err != nil {
 		panic(err)
 	}
-
-	for i := len(containers); i < 10; i++ {
+	nodeCount := 10
+	nodeCountSetting := os.GetEnv("NODECOUNT")
+	if nodeCountSetting != "" {
+		nodeCount, _ = strconv.Atoi(nodeCountSetting)
+	}
+	for i := len(containers); i < nodeCount; i++ {
 		logging.Info.Printf("Creating lit node %d\n", i)
 		err = MakeNewNode(cli)
 		if err != nil {
