@@ -1,28 +1,11 @@
 import React, { Component } from 'react';
-import CssBaseline from 'material-ui/CssBaseline';
-import { withStyles } from 'material-ui/styles';
 import './App.css';
-import AppBar from 'material-ui/AppBar';
-import Toolbar from 'material-ui/Toolbar';
-import Typography from 'material-ui/Typography';
-import Grid from 'material-ui/Grid';
-import Card, { CardActions, CardContent } from 'material-ui/Card';
-import Button from 'material-ui/Button';
-import IconButton from 'material-ui/IconButton';
-import AddIcon from '@material-ui/icons/Add';
-import DeleteIcon from '@material-ui/icons/Delete';
-import AttachMoneyIcon from '@material-ui/icons/AttachMoney';
-import OpenInNewIcon from '@material-ui/icons/OpenInNew';
-import ContentCopy from 'material-ui-icons/ContentCopy';
-import GavelIcon from '@material-ui/icons/Gavel';
-import copy from 'copy-to-clipboard';
 import { ScaleLoader } from 'react-spinners';
-const styles = theme => ({
-  table: {
-    minWidth: 700,
-  },
-});
+import { Navbar, NavbarBrand } from 'reactstrap';
 
+import {Row,Col} from 'reactstrap';
+import { Table } from 'reactstrap';
+import { Button } from 'reactstrap';
 
 class App extends Component {
 
@@ -35,6 +18,12 @@ class App extends Component {
       BlockHeights: {},
       IsCreating: false
     };
+
+    this.newNode = this.newNode.bind(this);
+    this.updateBlockHeight = this.updateBlockHeight.bind(this);
+    this.update = this.update.bind(this);
+    this.mineBlock = this.mineBlock.bind(this);
+    this.dropNode = this.dropNode.bind(this);
   }
 
   updateBlockHeight() {
@@ -79,12 +68,14 @@ class App extends Component {
   }
 
   update() { 
-    fetch("/api/nodes/list")
-    .then(res => res.json())
-    .then(res => {
-      this.setState({Nodes:res})
-    });
-    this.updateBlockHeight();
+    if(!this.state.IsCreating) {
+      fetch("/api/nodes/list")
+      .then(res => res.json())
+      .then(res => {
+        this.setState({Nodes:res})
+      });
+      this.updateBlockHeight();
+    }
   }
 
   fundNode(node) {
@@ -95,33 +86,74 @@ class App extends Component {
     });
   }
 
-  copyPubNodeToClipboard(n) {
-    copy(n.Address + '@' + document.location.hostname + ':' + n.PublicLitPort)
-  }
-
-  copyPrivNodeToClipboard(n) {
-    copy(n.Address + '@' + n.Name)
-  }
-
-
   render() {
     let creation = null;
+    let addNew = null;
     if(this.state.IsCreating) {
-      creation = ( <Grid key="IsLoading" item xs={12}>
-        <ScaleLoader />
-        <Typography>
-          Creating your new LIT node...
-        </Typography>
-      </Grid> )
+      creation = ( <tr>
+          <td colspan="4"><ScaleLoader /> Creating new node...</td>
+        </tr>)
+    } else {
+      addNew = ( <tr>
+        <td colspan="4"><Button onClick={this.newNode}>Add new</Button></td>
+      </tr>)
     }
 
     var blockHeights = Object.keys(this.state.BlockHeights).map((k) => {
-      return " [" + k + ": " + this.state.BlockHeights[k] + "]";
+      return <Col xs={4}><b>{k}:</b><br/><h1>{this.state.BlockHeights[k]}</h1></Col>;
     });
+
+    var nodes = this.state.Nodes.map((n) => {
+      return <tr>
+        <td>{n.Name}</td>
+        <td>{n.Address}</td>
+        <td>{window.location.hostname}:{n.PublicLitPort}</td>
+        <td><Button onClick={((e) => { this.dropNode(n); })}>Delete</Button></td>
+        </tr>;
+    })
 
     return (
       <div className="App">
-        <CssBaseline />
+        
+        <Navbar color="light" light expand="md">
+          <NavbarBrand href="/">Lit Demo Environment</NavbarBrand>
+        </Navbar>
+
+        <Row>
+          {blockHeights}
+        </Row>
+
+        <Table striped>
+          <thead>
+            <tr>
+              <th>Name</th>
+              <th>Status</th>
+              <th>Funds</th>
+              <th>&nbsp;</th>
+            </tr>
+          </thead>
+          <tbody>
+            {nodes}
+            {creation}
+            {addNew}
+          </tbody>
+        </Table>
+      </div>
+    );
+  }
+
+  componentDidMount() {
+    this.update();
+    setInterval(() => {this.update()}, 10000);
+  }
+}
+
+export default App;
+
+/**
+ * 
+ * 
+ * <CssBaseline />
         <AppBar position="static">
           <Toolbar>
             <Typography variant="title" color="inherit">
@@ -132,6 +164,8 @@ class App extends Component {
             </IconButton>
           </Toolbar>
         </AppBar>
+
+
 
         <Grid container spacing={24}>
           {this.state.Nodes.map(n => {
@@ -182,15 +216,5 @@ class App extends Component {
             </Button>
           </Grid>
         </Grid>
-
-      </div>
-    );
-  }
-
-  componentDidMount() {
-    this.update();
-    setInterval(() => {this.update()}, 10000);
-  }
-}
-
-export default withStyles(styles)(App);
+        
+ */

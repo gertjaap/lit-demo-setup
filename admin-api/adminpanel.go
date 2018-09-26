@@ -3,7 +3,6 @@ package main
 import (
 	"net/http"
 	"os"
-	"strconv"
 	"time"
 
 	"github.com/docker/docker/client"
@@ -82,45 +81,7 @@ func main() {
 		portString = "8000"
 	}
 
-	// check if we have 100 nodes, boot them if not.
-	containers, err := docker.LitNodes(cli)
-	if err != nil {
-		panic(err)
-	}
-	nodeCount := 10
-	nodeCountSetting := os.Getenv("NODECOUNT")
-	if nodeCountSetting != "" {
-		nodeCount, _ = strconv.Atoi(nodeCountSetting)
-	}
-	for i := len(containers); i < nodeCount; i++ {
-		logging.Info.Printf("Creating lit node %d\n", i)
-		err = MakeNewNode(cli)
-		if err != nil {
-			panic(err)
-		}
-	}
-
 	logging.Info.Println("Listening on port %s", portString)
 
 	logging.Error.Fatal(http.ListenAndServe(":"+portString, handlers.CORS(originsOk, headersOk, methodsOk)(logging.WebLoggingMiddleware(r))))
-}
-
-func MakeNewNode(cli *client.Client) error {
-	node, err := docker.NewLitNode(cli)
-	if err != nil {
-		return err
-	}
-
-	node.Address, err = docker.GetAddress(cli, node.Name)
-	if err != nil {
-		return err
-	}
-	docker.NodeAddresses[node.Name] = node.Address
-
-	err = docker.ConnectAndFund(cli, node.Name)
-	if err != nil {
-		return err
-	}
-
-	return nil
 }
