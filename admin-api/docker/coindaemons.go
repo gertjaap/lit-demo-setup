@@ -52,7 +52,7 @@ func InitCoinDaemons(cli *client.Client) error {
 				continue
 			}
 			for _, n := range c.Names {
-				if n[1:] == cd.ContainerName && c.ImageID != cd.ContainerName {
+				if n[1:] == cd.ContainerName && c.ImageID != cd.ImageID {
 					cli.ContainerRemove(context.Background(), c.ID, types.ContainerRemoveOptions{Force: true})
 				}
 			}
