@@ -33,6 +33,12 @@ func InitCoinDaemons(cli *client.Client) error {
 	}
 
 	for _, cd := range coindaemons.CoinDaemons {
+		if cd.ImageID == "" {
+			cd.ImageID, err = GetImage(cli, cd.ImageName)
+			if err != nil {
+				return err
+			}
+		}
 		logging.Info.Printf("Checking if coin daemon %s is running\n", cd.ContainerName)
 		found := false
 		for _, c := range containers {
@@ -44,6 +50,11 @@ func InitCoinDaemons(cli *client.Client) error {
 			}
 			if !correctNetwork {
 				continue
+			}
+			for _, n := range c.Names {
+				if n[1:] == cd.ContainerName && c.ImageID != cd.ContainerName {
+					cli.ContainerRemove(context.Background(), c.ID, types.ContainerRemoveOptions{Force: true})
+				}
 			}
 			if c.ImageID == cd.ImageID {
 				found = true

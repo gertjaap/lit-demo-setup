@@ -4,6 +4,7 @@ import "github.com/mit-dci/lit/btcutil/chaincfg"
 
 type CoinDaemon struct {
 	ImageID               string
+	ImageName             string
 	DataFolderInContainer string
 	DataSubFolderOnHost   string
 	ConfigName            string
@@ -18,7 +19,8 @@ type CoinDaemon struct {
 
 var CoinDaemons = []CoinDaemon{
 	{
-		ImageID:               "sha256:d2f1a227f4f0918612cbc5232fb62ec1495abccbf6b8ee1b783656fad123f6e9",
+		ImageID:               "",
+		ImageName:             "bitcoind",
 		DataFolderInContainer: "/bitcoin/.bitcoin",
 		DataSubFolderOnHost:   "bitcoind",
 		ConfigName:            "bitcoin.conf",
@@ -40,7 +42,8 @@ var CoinDaemons = []CoinDaemon{
 		},
 	},
 	{
-		ImageID:               "sha256:13e89696f3872b07e20d9c452cf18b7d6a51aa91372f3faabe2497da3a210d8b",
+		ImageID:               "",
+		ImageName:             "litecoind",
 		DataFolderInContainer: "/home/litecoin/.litecoin",
 		DataSubFolderOnHost:   "litecoind",
 		ConfigName:            "litecoin.conf",
@@ -84,7 +87,8 @@ var CoinDaemons = []CoinDaemon{
 		},
 	},*/
 	{
-		ImageID:               "sha256:b435f08c7476a09141f92f52fcf237e9b1c1d223b54905246ff0f92ed50de84f",
+		ImageID:               "",
+		ImageName:             "dummyusdd",
 		DataFolderInContainer: "/bitcoin/.bitcoin",
 		DataSubFolderOnHost:   "dummyusdd",
 		ConfigName:            "bitcoin.conf",

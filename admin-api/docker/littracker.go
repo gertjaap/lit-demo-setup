@@ -12,11 +12,18 @@ import (
 	"github.com/gertjaap/lit-demo-setup/admin-api/logging"
 )
 
-var mongoImageId = "sha256:e3985c6fb3c82537e86f41f87c733c8e2e1381b1d2b38d6dd82208a8531bfed3"
-var littrackerImageId = "sha256:b4168cf71d68f5548f9a365a78d6d71cea6e2311e5e2ff2b091062ee39ae29d1"
-
 func InitLitTracker(cli *client.Client) error {
 	containers, err := cli.ContainerList(context.Background(), types.ContainerListOptions{})
+	if err != nil {
+		return err
+	}
+
+	mongoImageId, err := GetImage(cli, "mongo")
+	if err != nil {
+		return err
+	}
+
+	littrackerImageId, err := GetImage(cli, "littracker")
 	if err != nil {
 		return err
 	}
@@ -34,6 +41,14 @@ func InitLitTracker(cli *client.Client) error {
 		}
 		if !correctNetwork {
 			continue
+		}
+		for _, n := range c.Names {
+			if n[1:] == "litdemotrackermongo" && c.ImageID != mongoImageId {
+				cli.ContainerRemove(context.Background(), c.ID, types.ContainerRemoveOptions{Force: true})
+			}
+			if n[1:] == "litdemotracker" && c.ImageID != littrackerImageId {
+				cli.ContainerRemove(context.Background(), c.ID, types.ContainerRemoveOptions{Force: true})
+			}
 		}
 		if c.ImageID == littrackerImageId {
 			trackerFound = true
