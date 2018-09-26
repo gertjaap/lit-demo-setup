@@ -88,7 +88,7 @@ func main() {
 		panic(err)
 	}
 	nodeCount := 10
-	nodeCountSetting := os.GetEnv("NODECOUNT")
+	nodeCountSetting := os.Getenv("NODECOUNT")
 	if nodeCountSetting != "" {
 		nodeCount, _ = strconv.Atoi(nodeCountSetting)
 	}
