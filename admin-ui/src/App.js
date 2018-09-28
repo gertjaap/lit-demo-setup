@@ -2,7 +2,8 @@ import React, { Component } from 'react';
 import './App.css';
 import { ScaleLoader } from 'react-spinners';
 import { Navbar, NavbarBrand } from 'reactstrap';
-
+import AuthPopup from './AuthPopup';
+import LogsPopup from './LogsPopup';
 import {Row,Col} from 'reactstrap';
 import { Table } from 'reactstrap';
 import { Button } from 'reactstrap';
@@ -16,7 +17,11 @@ class App extends Component {
       IsDropping: "",
       Nodes: [],
       BlockHeights: {},
-      IsCreating: false
+      IsCreating: false,
+      authPopupOpen: false,
+      authPopupNodeName: '',
+      logsPopupOpen: false,
+      logsPopupNodeName: ''
     };
 
     this.newNode = this.newNode.bind(this);
@@ -24,6 +29,10 @@ class App extends Component {
     this.update = this.update.bind(this);
     this.mineBlock = this.mineBlock.bind(this);
     this.dropNode = this.dropNode.bind(this);
+    this.showNodeAuth = this.showNodeAuth.bind(this);
+    this.restartNode = this.restartNode.bind(this);
+    this.closeAuthPopup = this.closeAuthPopup.bind(this);
+    this.closeLogsPopup = this.closeLogsPopup.bind(this);
   }
 
   updateBlockHeight() {
@@ -55,6 +64,43 @@ class App extends Component {
       this.update();
     });
   }
+
+  restartNode(node) {
+    fetch("/api/nodes/restart/" + node.Name)
+    .then(res => res.json())
+    .then(res => {
+       this.update();
+    });
+  }
+
+  showNodeAuth(node) {
+    this.setState({
+      authPopupOpen: true,
+      authPopupNodeName: node.Name
+    })
+  }
+
+  closeAuthPopup() {
+    this.setState({
+      authPopupOpen: false,
+      authPopupNodeName: ''
+    })
+  }
+
+  showNodeLogs(node) {
+    this.setState({
+      logsPopupOpen: true,
+      logsPopupNodeName: node.Name
+    })
+  }
+
+  closeLogsPopup() {
+    this.setState({
+      logsPopupOpen: false,
+      logsPopupNodeName: ''
+    })
+  }
+
 
   newNode() {
     this.setState({IsCreating:true})
@@ -108,7 +154,12 @@ class App extends Component {
         <td>{n.Name}</td>
         <td>{n.Address}</td>
         <td>{window.location.hostname}:{n.PublicLitPort}</td>
-        <td><Button onClick={((e) => { this.dropNode(n); })}>Delete</Button></td>
+        <td>
+          <Button onClick={((e) => { this.showNodeAuth(n); })}>Auth</Button>{' '}
+          <Button onClick={((e) => { this.showNodeLogs(n); })}>Logs</Button>{' '}
+          <Button onClick={((e) => { this.restartNode(n); })}>Restart</Button>{' '}
+          <Button onClick={((e) => { this.dropNode(n); })}>Delete</Button>{' '}
+        </td>
         </tr>;
     })
 
@@ -138,6 +189,9 @@ class App extends Component {
             {addNew}
           </tbody>
         </Table>
+
+        <AuthPopup isOpen={this.state.authPopupOpen} onClose={this.closeAuthPopup} nodeName={this.state.authPopupNodeName} />
+        <LogsPopup isOpen={this.state.logsPopupOpen} onClose={this.closeLogsPopup} nodeName={this.state.logsPopupNodeName} />
       </div>
     );
   }

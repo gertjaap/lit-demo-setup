@@ -16,6 +16,10 @@ type RCSendArgs struct {
 	Msg     []byte
 }
 
+type RCPendingAuthRequestsReply struct {
+	PubKeys [][33]byte
+}
+
 func RCAuth(c *litrpc.LndcRpcClient, pubKey [33]byte, auth bool) (*StatusReply, error) {
 	args := new(RCAuthArgs)
 	args.Authorization = new(RemoteControlAuthorization)
@@ -37,6 +41,16 @@ func RCSend(c *litrpc.LndcRpcClient, peerIdx uint32, msg []byte) (*StatusReply, 
 
 	reply := new(StatusReply)
 	err := c.Call("LitRPC.RemoteControlSend", args, reply)
+	if err != nil {
+		return nil, err
+	}
+	return reply, nil
+}
+
+func PendingRCAuthRequests(c *litrpc.LndcRpcClient) (*RCPendingAuthRequestsReply, error) {
+	args := new(NoArgs)
+	reply := new(RCPendingAuthRequestsReply)
+	err := c.Call("LitRPC.ListPendingRemoteControlAuthRequests", args, reply)
 	if err != nil {
 		return nil, err
 	}

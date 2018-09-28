@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"net/http"
 
+	"github.com/docker/docker/api/types"
 	"github.com/docker/docker/client"
 	"github.com/gertjaap/lit-demo-setup/admin-api/docker"
 	"github.com/gertjaap/lit-demo-setup/admin-api/litrpc"
@@ -27,11 +28,18 @@ func ListNodesHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// Ditch the big fat node from the list
+	filteredContainers := make([]types.Container, 0)
+	for _, c := range containers {
+		if c.Names[0][1:] != "litdemobigfatnode" {
+			filteredContainers = append(filteredContainers, c)
+		}
+	}
+
 	// Connect to all nodes and fetch their status
+	nodes := make([]models.LitNode, len(filteredContainers))
 
-	nodes := make([]models.LitNode, len(containers))
-
-	for i, c := range containers {
+	for i, c := range filteredContainers {
 		nodes[i].Name = c.Names[0][1:]
 		rpcCon, err := docker.GetLndcRpc(cli, nodes[i].Name)
 		if err != nil {
@@ -39,6 +47,7 @@ func ListNodesHandler(w http.ResponseWriter, r *http.Request) {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
 		}
+		defer rpcCon.Close()
 		nodes[i].Balances, err = litrpc.GetBalancesFromNode(rpcCon)
 		if err != nil {
 			logging.Error.Printf("ListNodesHandler GetBalancesFromNode error: %s", err.Error())

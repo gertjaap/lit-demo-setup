@@ -310,6 +310,51 @@ func DropLitNode(cli *client.Client, name string) error {
 	return fmt.Errorf("Invalid container %s", name)
 }
 
+func GetLitNodeContainerByName(cli *client.Client, name string) (string, error) {
+	nodes, err := LitNodes(cli)
+	if err != nil {
+		return "", err
+	}
+
+	container := types.Container{ID: "undefined"}
+
+	for _, n := range nodes {
+		if n.Names[0][1:] == name {
+			container = n
+		}
+	}
+
+	if container.ID != "undefined" {
+		return container.ID, nil
+	}
+
+	return "", fmt.Errorf("Container not found")
+}
+
+func RestartLitNode(cli *client.Client, name string) error {
+	nodes, err := LitNodes(cli)
+	if err != nil {
+		return err
+	}
+
+	containerToDrop := types.Container{ID: "undefined"}
+
+	for _, n := range nodes {
+		if n.Names[0][1:] == name {
+			containerToDrop = n
+		}
+	}
+
+	if containerToDrop.ID != "undefined" {
+		logging.Info.Println("Found container to restart, restarting...")
+		cli.ContainerRestart(context.Background(), containerToDrop.ID, nil)
+		return nil
+	}
+
+	logging.Error.Println("Container not found, returning error")
+	return fmt.Errorf("Invalid container %s", name)
+}
+
 func NewLitNode(cli *client.Client) (models.LitNode, error) {
 	newNode := models.LitNode{}
 	creationMutex.Lock()

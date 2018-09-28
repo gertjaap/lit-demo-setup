@@ -71,8 +71,8 @@ func InitBigFatNode(cli *client.Client) error {
 			logging.Info.Printf("Funding on %s\n", adr)
 			for _, cd := range coindaemons.CoinDaemons {
 				if strings.HasPrefix(adr, cd.CoinParams.Bech32Prefix) {
-					// Send 50 transactions of 100 coins of each
-					for i := 0; i < 50; i++ {
+					// Send 100 transactions of 100 coins of each
+					for i := 0; i < 100; i++ {
 						err = cd.SendCoins(adr, 10000000000)
 						if err != nil {
 							return err
@@ -142,13 +142,13 @@ func ConnectAndFund(cli *client.Client, nodeName string) error {
 	time.Sleep(time.Second * 2)
 
 	// Connect to the node (this will block until it's available - since it has to sync blocks and stuff)
-	_, err := GetLndcRpc(cli, nodeName)
+	lndc, err := GetLndcRpc(cli, nodeName)
 	if err != nil {
 		logging.Error.Printf("Error connecting to new node %s: %s\n", nodeName, err.Error())
 		return err
 	}
 
-	//lndc.Close()
+	lndc.Close()
 
 	rpcClient, err := GetLndcRpc(cli, "litdemobigfatnode")
 	if err != nil {
