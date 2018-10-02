@@ -3,6 +3,7 @@ import './App.css';
 import { ScaleLoader } from 'react-spinners';
 import { Navbar, NavbarBrand } from 'reactstrap';
 import AuthPopup from './AuthPopup';
+import QrPopup from './QrPopup';
 import LogsPopup from './LogsPopup';
 import {Row,Col} from 'reactstrap';
 import { Table } from 'reactstrap';
@@ -21,7 +22,10 @@ class App extends Component {
       authPopupOpen: false,
       authPopupNodeName: '',
       logsPopupOpen: false,
-      logsPopupNodeName: ''
+      logsPopupNodeName: '',
+      qrPopupOpen: false,
+      qrPopupNodeName: '',
+      qrPopupNodeUrl: ''
     };
 
     this.newNode = this.newNode.bind(this);
@@ -33,6 +37,8 @@ class App extends Component {
     this.restartNode = this.restartNode.bind(this);
     this.closeAuthPopup = this.closeAuthPopup.bind(this);
     this.closeLogsPopup = this.closeLogsPopup.bind(this);
+    this.closeQrPopup = this.closeQrPopup.bind(this);
+    this.showNodeQr = this.showNodeQr.bind(this);
   }
 
   updateBlockHeight() {
@@ -87,10 +93,25 @@ class App extends Component {
     })
   }
 
+  closeQrPopup() {
+    this.setState({
+      qrPopupOpen: false,
+      qrPopupNodeName: ''
+    })
+  }
+
   showNodeLogs(node) {
     this.setState({
       logsPopupOpen: true,
       logsPopupNodeName: node.Name
+    })
+  }
+
+  showNodeQr(node) {
+    this.setState({
+      qrPopupOpen: true,
+      qrPopupNodeName: node.Name,
+      qrPopupNodeUrl: node.Address + '@' + window.location.hostname + ':'  + node.PublicLitPort
     })
   }
 
@@ -155,6 +176,7 @@ class App extends Component {
         <td>{n.Address}</td>
         <td>{window.location.hostname}:{n.PublicLitPort}</td>
         <td>
+          <Button onClick={((e) => { this.showNodeQr(n); })}>Pair</Button>{' '}
           <Button onClick={((e) => { this.showNodeAuth(n); })}>Auth</Button>{' '}
           <Button onClick={((e) => { this.showNodeLogs(n); })}>Logs</Button>{' '}
           <Button onClick={((e) => { this.restartNode(n); })}>Restart</Button>{' '}
@@ -178,8 +200,8 @@ class App extends Component {
           <thead>
             <tr>
               <th>Name</th>
-              <th>Status</th>
-              <th>Funds</th>
+              <th>Address</th>
+              <th>Endpoint</th>
               <th>&nbsp;</th>
             </tr>
           </thead>
@@ -191,6 +213,7 @@ class App extends Component {
         </Table>
 
         <AuthPopup isOpen={this.state.authPopupOpen} onClose={this.closeAuthPopup} nodeName={this.state.authPopupNodeName} />
+        <QrPopup isOpen={this.state.qrPopupOpen} onClose={this.closeQrPopup} nodeUrl={this.state.qrPopupNodeUrl} nodeName={this.state.qrPopupNodeName} />
         <LogsPopup isOpen={this.state.logsPopupOpen} onClose={this.closeLogsPopup} nodeName={this.state.logsPopupNodeName} />
       </div>
     );
