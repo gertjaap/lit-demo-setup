@@ -24,12 +24,14 @@ import (
 	"github.com/gertjaap/lit-demo-setup/admin-api/models"
 	"github.com/mit-dci/lit/btcutil/hdkeychain"
 	"github.com/mit-dci/lit/coinparam"
+	"github.com/mit-dci/lit/crypto/koblitz"
 	"github.com/mit-dci/lit/litrpc"
 	"github.com/mit-dci/lit/lnutil"
 	"github.com/mit-dci/lit/portxo"
 )
 
 var NodeAddresses = map[string]string{}
+var nodeLndcs = map[string]*litrpc.LndcRpcClient{}
 var creationMutex sync.Mutex
 
 func LitNodes(cli *client.Client) ([]types.Container, error) {
@@ -219,53 +221,66 @@ func GetAddress(cli *client.Client, name string) (string, error) {
 	return lnutil.LitAdrFromPubkey(localIDPub), nil
 }
 
-func GetLndcRpc(cli *client.Client, name string) (*litrpc.LndcRpcClient, error) {
+var adminPanelKey *koblitz.PrivateKey
+
+func GetAdminPanelKey() (*koblitz.PrivateKey, error) {
+
+	if adminPanelKey == nil {
+		key32 := [32]byte{}
+		if _, err := os.Stat("/data/adminpanel.key"); os.IsNotExist(err) {
+			_, err = rand.Read(key32[:])
+			if err != nil {
+				adminPanelKey = nil
+				return nil, err
+			}
+			err = ioutil.WriteFile("/data/adminpanel.key", key32[:], 0600)
+			if err != nil {
+				adminPanelKey = nil
+				return nil, err
+			}
+		} else {
+			fileKey, err := ioutil.ReadFile("/data/adminpanel.key")
+			if err != nil {
+				adminPanelKey = nil
+				return nil, err
+			}
+			copy(key32[:], fileKey)
+		}
+		adminPanelKey, _ = koblitz.PrivKeyFromBytes(koblitz.S256(), key32[:])
+	}
+	return adminPanelKey, nil
+}
+
+func GetLndcRpc(cli *client.Client, name string, useLitAfKey bool) (*litrpc.LndcRpcClient, error) {
+	lndc, ok := nodeLndcs[name]
+	if ok && !useLitAfKey {
+		return lndc, nil
+	}
 	dataDir, err := GetLitNodeDataDir(cli, name)
 	if err != nil {
 		logging.Error.Printf("Error fetching datadir for %s: %s\n", name, err.Error())
 		return nil, err
 	}
-	logging.Info.Printf("Data dir for %s: %s\n", name, dataDir)
-	return NewLndcFromHostNameAndDataDir(name, dataDir)
-}
-
-func NewLndcFromHostNameAndDataDir(hostName, dataDir string) (*litrpc.LndcRpcClient, error) {
-	keyFilePath := filepath.Join(dataDir, "privkey.hex")
-	privKey, err := lnutil.ReadKeyFile(keyFilePath)
+	rootKey, err := GetRootKeyFromDataDir(dataDir)
 	if err != nil {
-		logging.Error.Printf("NewLndcFromHostNameAndDataDir error in ReadKeyFile %s\n", err.Error())
+		logging.Error.Printf("Error fetching rootKey for %s: %s\n", name, err.Error())
 		return nil, err
 	}
-	rootPrivKey, err := hdkeychain.NewMaster(privKey[:], &coinparam.TestNet3Params)
+	localIDPub, err := DeriveNodePub(rootKey)
+	adr := fmt.Sprintf("%s@%s:%d", lnutil.LitAdrFromPubkey(localIDPub), name, 2448)
+
+	key, err := GetAdminPanelKey()
 	if err != nil {
-		logging.Error.Printf("NewLndcFromHostNameAndDataDir error in hdkeychain.NewMaster %s\n", err.Error())
+		logging.Error.Printf("Error getting adminpanel key: %s\n", err.Error())
 		return nil, err
 	}
-
-	var kg portxo.KeyGen
-	kg.Depth = 5
-	kg.Step[0] = 44 | 1<<31
-	kg.Step[1] = 513 | 1<<31
-	kg.Step[2] = 9 | 1<<31
-	kg.Step[3] = 1 | 1<<31
-	kg.Step[4] = 0 | 1<<31
-	key, err := kg.DerivePrivateKey(rootPrivKey)
-	if err != nil {
-		logging.Error.Printf("NewLndcFromHostNameAndDataDir error in DerivePrivateKey %s\n", err.Error())
-		return nil, err
+	if useLitAfKey {
+		key, err = DeriveLitAfKey(rootKey)
+		if err != nil {
+			logging.Error.Printf("Error deriving lit-af key: %s\n", err.Error())
+			return nil, err
+		}
 	}
-
-	kg.Step[3] = 0 | 1<<31
-	localIDPriv, err := kg.DerivePrivateKey(rootPrivKey)
-	if err != nil {
-		logging.Error.Printf("NewLndcFromHostNameAndDataDir error in DerivePrivateKey %s\n", err.Error())
-		logging.Error.Printf(err.Error())
-	}
-	var localIDPub [33]byte
-	copy(localIDPub[:], localIDPriv.PubKey().SerializeCompressed())
-
-	adr := fmt.Sprintf("%s@%s:%d", lnutil.LitAdrFromPubkey(localIDPub), hostName, 2448)
-	localIDPriv = nil
 
 	retries := 0
 	var ret *litrpc.LndcRpcClient
@@ -283,31 +298,75 @@ func NewLndcFromHostNameAndDataDir(hostName, dataDir string) (*litrpc.LndcRpcCli
 		time.Sleep(time.Second * 1)
 	}
 
+	// Don't cache connections using lit-af key. These should also be closed by the caller.
+	if !useLitAfKey {
+		nodeLndcs[name] = ret
+	}
+
 	return ret, nil
 }
 
+func GetRootKeyFromDataDir(dataDir string) (*hdkeychain.ExtendedKey, error) {
+	keyFilePath := filepath.Join(dataDir, "privkey.hex")
+	privKey, err := lnutil.ReadKeyFile(keyFilePath)
+	if err != nil {
+		logging.Error.Printf("NewLndcFromHostNameAndDataDir error in ReadKeyFile %s\n", err.Error())
+		return nil, err
+	}
+	rootPrivKey, err := hdkeychain.NewMaster(privKey[:], &coinparam.TestNet3Params)
+	if err != nil {
+		logging.Error.Printf("NewLndcFromHostNameAndDataDir error in hdkeychain.NewMaster %s\n", err.Error())
+		return nil, err
+	}
+	return rootPrivKey, nil
+}
+
+func DeriveLitAfKey(rootPrivKey *hdkeychain.ExtendedKey) (*koblitz.PrivateKey, error) {
+	var kg portxo.KeyGen
+	kg.Depth = 5
+	kg.Step[0] = 44 | 1<<31
+	kg.Step[1] = 513 | 1<<31
+	kg.Step[2] = 9 | 1<<31
+	kg.Step[3] = 1 | 1<<31
+	kg.Step[4] = 0 | 1<<31
+
+	key, err := kg.DerivePrivateKey(rootPrivKey)
+	if err != nil {
+		logging.Error.Printf("NewLndcFromHostNameAndDataDir error in DerivePrivateKey %s\n", err.Error())
+		return nil, err
+	}
+	return key, nil
+}
+
+func DeriveNodePub(rootPrivKey *hdkeychain.ExtendedKey) ([33]byte, error) {
+	var kg portxo.KeyGen
+	kg.Depth = 5
+	kg.Step[0] = 44 | 1<<31
+	kg.Step[1] = 513 | 1<<31
+	kg.Step[2] = 9 | 1<<31
+	kg.Step[3] = 0 | 1<<31
+	kg.Step[4] = 0 | 1<<31
+
+	localIDPriv, err := kg.DerivePrivateKey(rootPrivKey)
+	if err != nil {
+		logging.Error.Printf("NewLndcFromHostNameAndDataDir error in DerivePrivateKey %s\n", err.Error())
+		return [33]byte{}, err
+	}
+
+	var localIDPub [33]byte
+	copy(localIDPub[:], localIDPriv.PubKey().SerializeCompressed())
+
+	return localIDPub, nil
+}
+
 func DropLitNode(cli *client.Client, name string) error {
-	nodes, err := LitNodes(cli)
+	containerToDrop, err := GetLitNodeContainerByName(cli, name)
 	if err != nil {
 		return err
 	}
-
-	containerToDrop := types.Container{ID: "undefined"}
-
-	for _, n := range nodes {
-		if n.Names[0][1:] == name {
-			containerToDrop = n
-		}
-	}
-
-	if containerToDrop.ID != "undefined" {
-		logging.Info.Println("Found container to drop, dropping...")
-		cli.ContainerRemove(context.Background(), containerToDrop.ID, types.ContainerRemoveOptions{Force: true})
-		return nil
-	}
-
-	logging.Error.Println("Container not found, returning error")
-	return fmt.Errorf("Invalid container %s", name)
+	logging.Info.Println("Found container to drop, dropping...")
+	cli.ContainerRemove(context.Background(), containerToDrop, types.ContainerRemoveOptions{Force: true})
+	return nil
 }
 
 func GetLitNodeContainerByName(cli *client.Client, name string) (string, error) {
@@ -332,27 +391,14 @@ func GetLitNodeContainerByName(cli *client.Client, name string) (string, error) 
 }
 
 func RestartLitNode(cli *client.Client, name string) error {
-	nodes, err := LitNodes(cli)
+	containerToRestart, err := GetLitNodeContainerByName(cli, name)
 	if err != nil {
 		return err
 	}
 
-	containerToDrop := types.Container{ID: "undefined"}
-
-	for _, n := range nodes {
-		if n.Names[0][1:] == name {
-			containerToDrop = n
-		}
-	}
-
-	if containerToDrop.ID != "undefined" {
-		logging.Info.Println("Found container to restart, restarting...")
-		cli.ContainerRestart(context.Background(), containerToDrop.ID, nil)
-		return nil
-	}
-
-	logging.Error.Println("Container not found, returning error")
-	return fmt.Errorf("Invalid container %s", name)
+	logging.Info.Println("Found container to restart, restarting...")
+	cli.ContainerRestart(context.Background(), containerToRestart, nil)
+	return nil
 }
 
 func NewLitNode(cli *client.Client) (models.LitNode, error) {

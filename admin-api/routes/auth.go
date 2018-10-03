@@ -20,7 +20,7 @@ func AuthNodeHandler(w http.ResponseWriter, r *http.Request) {
 	}
 	defer cli.Close()
 	vars := mux.Vars(r)
-	rpcCon, err := docker.GetLndcRpc(cli, vars["id"])
+	rpcCon, err := docker.GetLndcRpc(cli, vars["id"], false)
 	if err != nil {
 		logging.Error.Printf("AuthNodeHandler GetLndcRpc error: %s", err.Error())
 		http.Error(w, err.Error(), http.StatusInternalServerError)
@@ -62,7 +62,7 @@ func PendingAuthForNodeHandler(w http.ResponseWriter, r *http.Request) {
 	}
 	defer cli.Close()
 	vars := mux.Vars(r)
-	rpcCon, err := docker.GetLndcRpc(cli, vars["id"])
+	rpcCon, err := docker.GetLndcRpc(cli, vars["id"], false)
 	if err != nil {
 		logging.Error.Printf("PendingAuthForNodeHandler GetLndcRpc error: %s", err.Error())
 		http.Error(w, err.Error(), http.StatusInternalServerError)

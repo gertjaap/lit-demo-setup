@@ -7,7 +7,8 @@ import (
 	"sync"
 	"time"
 
-	"github.com/mit-dci/lit/litrpc"
+	"github.com/gertjaap/lit-demo-setup/admin-api/litrpc"
+	litrpclit "github.com/mit-dci/lit/litrpc"
 
 	"github.com/docker/docker/api/types"
 	"github.com/docker/docker/client"
@@ -55,8 +56,23 @@ func InitBigFatNode(cli *client.Client) error {
 		}
 
 		// Fund the big fat node
-		rpcClient, err := GetLndcRpc(cli, "litdemobigfatnode")
+		rpcClient, err := GetLndcRpc(cli, "litdemobigfatnode", true)
 		if err != nil {
+			return err
+		}
+
+		// Authorize admin panel on bigfatnode
+		adminPanelKey, err := GetAdminPanelKey()
+		if err != nil {
+			logging.Error.Printf("Error getting admin panel key: %s\n", err.Error())
+			return err
+		}
+		adminPanelPubKey := [33]byte{}
+		copy(adminPanelPubKey[:], adminPanelKey.PubKey().SerializeCompressed())
+
+		err = litrpc.RcAuth(rpcClient, adminPanelPubKey, true)
+		if err != nil {
+			logging.Error.Printf("ConnectAndFund RcAuth error: %s", err.Error())
 			return err
 		}
 
@@ -87,11 +103,13 @@ func InitBigFatNode(cli *client.Client) error {
 		for i := 0; i < 10; i++ {
 			coindaemons.MineBlock()
 		}
+
+		rpcClient.Close()
 	}
 	return nil
 }
 
-func ConnectBFNToNode(rpcClient *litrpc.LndcRpcClient, node string) (uint32, error) {
+func ConnectBFNToNode(rpcClient *litrpclit.LndcRpcClient, node string) (uint32, error) {
 	bfnConnectMutex.Lock()
 
 	conns1, err := commands.ListConnections(rpcClient)
@@ -142,15 +160,30 @@ func ConnectAndFund(cli *client.Client, nodeName string) error {
 	time.Sleep(time.Second * 2)
 
 	// Connect to the node (this will block until it's available - since it has to sync blocks and stuff)
-	lndc, err := GetLndcRpc(cli, nodeName)
+	lndc, err := GetLndcRpc(cli, nodeName, true)
 	if err != nil {
 		logging.Error.Printf("Error connecting to new node %s: %s\n", nodeName, err.Error())
 		return err
 	}
 
+	logging.Info.Printf("Authorizing admin panel key on new node %s\n", nodeName)
+	adminPanelKey, err := GetAdminPanelKey()
+	if err != nil {
+		logging.Error.Printf("Error getting admin panel key: %s\n", err.Error())
+		return err
+	}
+	adminPanelPubKey := [33]byte{}
+	copy(adminPanelPubKey[:], adminPanelKey.PubKey().SerializeCompressed())
+
+	err = litrpc.RcAuth(lndc, adminPanelPubKey, true)
+	if err != nil {
+		logging.Error.Printf("ConnectAndFund RcAuth error: %s", err.Error())
+		return err
+	}
+
 	lndc.Close()
 
-	rpcClient, err := GetLndcRpc(cli, "litdemobigfatnode")
+	rpcClient, err := GetLndcRpc(cli, "litdemobigfatnode", false)
 	if err != nil {
 		logging.Error.Printf("Error connecting to BFN: %s\n", err.Error())
 		return err

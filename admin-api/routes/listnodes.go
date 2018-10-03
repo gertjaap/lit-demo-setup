@@ -41,13 +41,12 @@ func ListNodesHandler(w http.ResponseWriter, r *http.Request) {
 
 	for i, c := range filteredContainers {
 		nodes[i].Name = c.Names[0][1:]
-		rpcCon, err := docker.GetLndcRpc(cli, nodes[i].Name)
+		rpcCon, err := docker.GetLndcRpc(cli, nodes[i].Name, false)
 		if err != nil {
 			logging.Error.Printf("ListNodesHandler GetLndcRpc error: %s", err.Error())
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
 		}
-		defer rpcCon.Close()
 		nodes[i].Balances, err = litrpc.GetBalancesFromNode(rpcCon)
 		if err != nil {
 			logging.Error.Printf("ListNodesHandler GetBalancesFromNode error: %s", err.Error())
