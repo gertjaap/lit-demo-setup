@@ -10,6 +10,7 @@ import (
 	"github.com/docker/docker/api/types"
 	"github.com/docker/docker/api/types/container"
 	"github.com/docker/docker/client"
+	"github.com/docker/go-connections/nat"
 	"github.com/gertjaap/lit-demo-setup/admin-api/coindaemons"
 	"github.com/gertjaap/lit-demo-setup/admin-api/logging"
 )
@@ -72,7 +73,10 @@ func InitCoinDaemons(cli *client.Client) error {
 			containerConfig.Image = cd.ImageID
 			containerConfig.Volumes = map[string]struct{}{
 				cd.DataFolderInContainer: {}}
-
+			containerConfig.ExposedPorts = nat.PortSet{
+				nat.Port(fmt.Sprintf("%d/tcp", cd.P2PPort)): struct{}{},
+				nat.Port(fmt.Sprintf("%d/tcp", cd.RPCPort)): struct{}{},
+			}
 			if cd.Command != nil {
 				containerConfig.Cmd = cd.Command
 			}
@@ -82,6 +86,16 @@ func InitCoinDaemons(cli *client.Client) error {
 				return err
 			}
 			hostConfig := new(container.HostConfig)
+
+			hostConfig.PortBindings = nat.PortMap{
+				nat.Port(fmt.Sprintf("%d/tcp", cd.P2PPort)): []nat.PortBinding{
+					{
+						HostIP:   "0.0.0.0",
+						HostPort: fmt.Sprintf("%d", cd.P2PPort),
+					},
+				},
+			}
+
 			dataDir := path.Join(hostDataDir, cd.DataSubFolderOnHost)
 			hostConfig.Binds = []string{fmt.Sprintf("%s:%s", dataDir, cd.DataFolderInContainer)}
 			cbody, err := cli.ContainerCreate(context.Background(), containerConfig, hostConfig, nil, cd.ContainerName)
