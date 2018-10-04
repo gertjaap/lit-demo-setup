@@ -118,8 +118,8 @@ func InitCoinDaemons(cli *client.Client) error {
 
 			cd.WaitReady()
 
-			logging.Info.Printf("Coin daemon %s booted, mining first 3000 blocks...\n", cd.ContainerName)
-			err = cd.MineBlocks(3000)
+			logging.Info.Printf("Coin daemon %s booted, mining first %d blocks...\n", cd.ContainerName, cd.InitialBlocks)
+			err = cd.MineBlocks(cd.InitialBlocks)
 			if err != nil {
 				return err
 			}

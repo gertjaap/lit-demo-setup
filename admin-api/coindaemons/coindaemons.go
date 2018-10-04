@@ -3,32 +3,40 @@ package coindaemons
 import "github.com/mit-dci/lit/btcutil/chaincfg"
 
 type CoinDaemon struct {
-	ImageID               string
-	ImageName             string
-	DataFolderInContainer string
-	DataSubFolderOnHost   string
-	ConfigName            string
-	P2PPort               uint
-	RPCPort               uint
-	ContainerName         string
-	LitConfigPrefix       string
-	Command               []string
-	CoinParams            chaincfg.Params
-	LitCoinType           uint32
+	ImageID                string
+	ImageName              string
+	DataFolderInContainer  string
+	DataSubFolderOnHost    string
+	ConfigName             string
+	P2PPort                uint
+	RPCPort                uint
+	ContainerName          string
+	LitConfigPrefix        string
+	Command                []string
+	CoinParams             chaincfg.Params
+	LitCoinType            uint32
+	InitialFunding         uint32
+	InitialBlocks          uint32
+	NodeChannelCapacity    int64
+	NodeChannelInitialSend int64
 }
 
 var CoinDaemons = []CoinDaemon{
 	{
-		ImageID:               "",
-		ImageName:             "bitcoind",
-		DataFolderInContainer: "/bitcoin/.bitcoin",
-		DataSubFolderOnHost:   "bitcoind",
-		ConfigName:            "bitcoin.conf",
-		P2PPort:               18444,
-		RPCPort:               18443,
-		ContainerName:         "litdemobtcregtest",
-		LitConfigPrefix:       "reg",
-		LitCoinType:           257,
+		ImageID:                "",
+		ImageName:              "bitcoind",
+		DataFolderInContainer:  "/bitcoin/.bitcoin",
+		DataSubFolderOnHost:    "bitcoind",
+		ConfigName:             "bitcoin.conf",
+		P2PPort:                18444,
+		RPCPort:                18443,
+		ContainerName:          "litdemobtcregtest",
+		LitConfigPrefix:        "reg",
+		LitCoinType:            257,
+		InitialFunding:         10000,
+		InitialBlocks:          3000,
+		NodeChannelCapacity:    int64(100000000),
+		NodeChannelInitialSend: int64(400000),
 		CoinParams: chaincfg.Params{
 			// Address encoding magics
 			PubKeyHashAddrID: 0x6f, // starts with m or n
@@ -42,16 +50,20 @@ var CoinDaemons = []CoinDaemon{
 		},
 	},
 	{
-		ImageID:               "",
-		ImageName:             "litecoind",
-		DataFolderInContainer: "/home/litecoin/.litecoin",
-		DataSubFolderOnHost:   "litecoind",
-		ConfigName:            "litecoin.conf",
-		P2PPort:               19444,
-		RPCPort:               19443,
-		LitCoinType:           258,
-		ContainerName:         "litdemoltcregtest",
-		LitConfigPrefix:       "litereg",
+		ImageID:                "",
+		ImageName:              "litecoind",
+		DataFolderInContainer:  "/home/litecoin/.litecoin",
+		DataSubFolderOnHost:    "litecoind",
+		ConfigName:             "litecoin.conf",
+		P2PPort:                19444,
+		RPCPort:                19443,
+		LitCoinType:            258,
+		ContainerName:          "litdemoltcregtest",
+		LitConfigPrefix:        "litereg",
+		InitialFunding:         10000,
+		InitialBlocks:          3000,
+		NodeChannelCapacity:    int64(500000000),
+		NodeChannelInitialSend: int64(50000000),
 		CoinParams: chaincfg.Params{
 			// Address encoding magics
 			PubKeyHashAddrID: 0x6f, // starts with m or n
@@ -87,16 +99,20 @@ var CoinDaemons = []CoinDaemon{
 		},
 	},*/
 	{
-		ImageID:               "",
-		ImageName:             "dummyusdd",
-		DataFolderInContainer: "/bitcoin/.bitcoin",
-		DataSubFolderOnHost:   "dummyusdd",
-		ConfigName:            "bitcoin.conf",
-		P2PPort:               26999,
-		RPCPort:               18443,
-		ContainerName:         "litdemousdregtest",
-		LitConfigPrefix:       "dusd",
-		LitCoinType:           262,
+		ImageID:                "",
+		ImageName:              "dummyusdd",
+		DataFolderInContainer:  "/bitcoin/.bitcoin",
+		DataSubFolderOnHost:    "dummyusdd",
+		ConfigName:             "bitcoin.conf",
+		P2PPort:                26999,
+		RPCPort:                18443,
+		ContainerName:          "litdemousdregtest",
+		LitConfigPrefix:        "dusd",
+		LitCoinType:            262,
+		InitialFunding:         200000,
+		InitialBlocks:          10000,
+		NodeChannelCapacity:    int64(10000000000),
+		NodeChannelInitialSend: int64(1000000000),
 		CoinParams: chaincfg.Params{
 			PubKeyHashAddrID: 0x1e, // starts with D
 			ScriptHashAddrID: 0x5a, // starts with d

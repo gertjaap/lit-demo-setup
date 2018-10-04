@@ -87,9 +87,9 @@ func InitBigFatNode(cli *client.Client) error {
 			logging.Info.Printf("Funding on %s\n", adr)
 			for _, cd := range coindaemons.CoinDaemons {
 				if strings.HasPrefix(adr, cd.CoinParams.Bech32Prefix) {
-					// Send 100 transactions of 100 coins of each
+					// Send 100 transactions of InitialFunding/100 coins of each
 					for i := 0; i < 100; i++ {
-						err = cd.SendCoins(adr, 10000000000)
+						err = cd.SendCoins(adr, int64(cd.InitialFunding)*int64(1000000))
 						if err != nil {
 							return err
 						}
@@ -198,7 +198,7 @@ func ConnectAndFund(cli *client.Client, nodeName string) error {
 
 	for _, cd := range coindaemons.CoinDaemons {
 		logging.Info.Printf("Funding %s with %s\n", nodeName, cd.ContainerName)
-		reply, err := commands.Fund(rpcClient, peerIdx, cd.LitCoinType, 4000000000, 500000000)
+		reply, err := commands.Fund(rpcClient, peerIdx, cd.LitCoinType, cd.NodeChannelCapacity, cd.NodeChannelInitialSend)
 		if err != nil {
 			return err
 		}
