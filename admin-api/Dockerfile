@@ -11,6 +11,14 @@ RUN govendor fetch +external +missing
 COPY . /usr/local/go/src/github.com/gertjaap/lit-demo-setup/admin-api
 WORKDIR /usr/local/go/src/github.com/gertjaap/lit-demo-setup/admin-api
 RUN govendor fetch +missing
+
+## Temporary: Fetch memberweekdemo branch from gertjaap's GIT
+
+WORKDIR /usr/local/go/src/github.com/gertjaap/lit-demo-setup/admin-api/vendor/github.com/mit-dci
+RUN rm -rf lit
+RUN git clone --single-branch -b memberweekdemo https://github.com/gertjaap/lit
+WORKDIR /usr/local/go/src/github.com/gertjaap/lit-demo-setup/admin-api
+
 RUN go get -v ./...
 RUN go build
 
