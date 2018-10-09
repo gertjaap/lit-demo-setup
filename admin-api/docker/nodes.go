@@ -251,6 +251,14 @@ func GetAdminPanelKey() (*koblitz.PrivateKey, error) {
 	return adminPanelKey, nil
 }
 
+func DropLndcRpc(cli *client.Client, name string) {
+	_, ok := nodeLndcs[name]
+	if ok {
+		nodeLndcs[name].Close()
+		delete(nodeLndcs, name)
+	}
+}
+
 func GetLndcRpc(cli *client.Client, name string, useLitAfKey bool) (*litrpc.LndcRpcClient, error) {
 	lndc, ok := nodeLndcs[name]
 	if ok && !useLitAfKey {

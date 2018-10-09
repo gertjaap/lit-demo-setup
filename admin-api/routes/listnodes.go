@@ -49,6 +49,13 @@ func ListNodesHandler(w http.ResponseWriter, r *http.Request) {
 		}
 		nodes[i].Balances, err = litrpc.GetBalancesFromNode(rpcCon)
 		if err != nil {
+			// If something goes wrong on the rpc connection, reset it.
+			err = rpcCon.Reconnect()
+			if err != nil {
+				// remove the lndc
+				docker.DropLndcRpc(cli, nodes[i].Name)
+			}
+
 			logging.Error.Printf("ListNodesHandler GetBalancesFromNode error: %s", err.Error())
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
