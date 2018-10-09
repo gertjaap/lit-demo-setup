@@ -48,7 +48,7 @@ func ListNodesHandler(w http.ResponseWriter, r *http.Request) {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
 		}
-		nodes[i].Balances, err = litrpc.GetBalancesFromNode(rpcCon)
+		nodes[i].Balances, err = litrpc.GetRawBalancesFromNode(rpcCon)
 		if err != nil {
 			nodes[i].Error = true
 			nodes[i].ErrorDetails = err.Error()

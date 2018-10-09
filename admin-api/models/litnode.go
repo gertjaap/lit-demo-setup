@@ -7,7 +7,7 @@ import (
 type LitNode struct {
 	Name          string
 	ID            string
-	Balances      map[uint32]int64
+	Balances      []commands.CoinBalReply
 	Address       string
 	PublicLitPort int
 	PublicRpcPort int

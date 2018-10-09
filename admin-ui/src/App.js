@@ -201,13 +201,23 @@ class App extends Component {
         });
       }
 
+      var syncHeights = {};
+      syncHeights[257] = 0;
+      syncHeights[258] = 0;
+      syncHeights[262] = 0;
+      if(n.Balances !== null) {
+        n.Balances.forEach((b) => {
+          syncHeights[b.CoinType] = b.SyncHeight
+        });
+      }
+
       return <tr>
         <td>{n.Name}</td>
         <td>{n.Address}  <Button title="Pay this node" onClick={((e) => { this.showNodeQrPay(n); })}><FontAwesomeIcon icon={faQrcode} /></Button></td>
         <td>{window.location.hostname}:{n.PublicLitPort}</td>
-        <td><pre>{balances[257]}</pre></td>
-        <td><pre>{balances[258]}</pre></td>
-        <td><pre>{balances[262]}</pre></td>
+        <td><pre>{balances[257]}{'\n'}{'@' + syncHeights[257]}</pre></td>
+        <td><pre>{balances[258]}{'\n'}{'@' + syncHeights[258]}</pre></td>
+        <td><pre>{balances[262]}{'\n'}{'@' + syncHeights[262]}</pre></td>
         <td>{n.TrackerOK ? "OK" : "Fail"}</td>
         <td>
           <Button title="Pair with this node" onClick={((e) => { this.showNodeQr(n); })}><FontAwesomeIcon icon={faHandshake} /></Button>{' '}

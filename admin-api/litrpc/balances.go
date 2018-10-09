@@ -22,6 +22,18 @@ func GetBalancesFromNode(rpcCon *litrpc.LndcRpcClient) (map[uint32]int64, error)
 	return returnVal, nil
 }
 
+func GetRawBalancesFromNode(rpcCon *litrpc.LndcRpcClient) ([]commands.CoinBalReply, error) {
+	res, err := commands.GetBalance(rpcCon)
+	if err != nil {
+
+		logging.Error.Println(err)
+		return []commands.CoinBalReply{}, err
+
+	}
+
+	return res.Balances, nil
+}
+
 func GetChannelsFromNode(rpcCon *litrpc.LndcRpcClient) ([]commands.ChannelInfo, error) {
 	res, err := commands.ListChannels(rpcCon)
 	if err != nil {
