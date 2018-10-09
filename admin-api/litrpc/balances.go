@@ -21,3 +21,15 @@ func GetBalancesFromNode(rpcCon *litrpc.LndcRpcClient) (map[uint32]int64, error)
 	}
 	return returnVal, nil
 }
+
+func GetChannelsFromNode(rpcCon *litrpc.LndcRpcClient) ([]commands.ChannelInfo, error) {
+	res, err := commands.ListChannels(rpcCon)
+	if err != nil {
+
+		logging.Error.Println(err)
+		return []commands.ChannelInfo{}, err
+
+	}
+
+	return res.Channels, nil
+}

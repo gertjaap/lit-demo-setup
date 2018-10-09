@@ -57,17 +57,19 @@ class QrPopup extends Component {
     }
 
     reloadDetails() {
-        this.timer = setInterval(() => {
-            this.approvePendingRequests();
-        }, 3000);
+        if(this.props.mode === 'pair') {
+            this.timer = setInterval(() => {
+                this.approvePendingRequests();
+            }, 3000);
+        }
     }
 
     render() {
         return (<Modal isOpen={this.props.isOpen} className={this.props.className}>
-            <ModalHeader>Pair with {this.props.nodeName}</ModalHeader>
+            <ModalHeader>{this.props.mode === 'pair' ? "Pair with" : "Pay"} {this.props.nodeName}</ModalHeader>
             <ModalBody>
             <p>Scan this QR code from the lit mobile app:</p>
-            <QRCode size={256} value={this.props.nodeUrl} />
+            <QRCode size={256} value={this.props.mode === 'pair' ? this.props.nodeUrl : this.props.nodeAddress} />
             </ModalBody>
             <ModalFooter>
               <Button color="primary" onClick={this.props.onClose}>Done</Button>

@@ -2,6 +2,7 @@ package routes
 
 import (
 	"encoding/json"
+	"fmt"
 	"net/http"
 
 	"github.com/docker/docker/api/types"
@@ -49,6 +50,9 @@ func ListNodesHandler(w http.ResponseWriter, r *http.Request) {
 		}
 		nodes[i].Balances, err = litrpc.GetBalancesFromNode(rpcCon)
 		if err != nil {
+			nodes[i].Error = true
+			nodes[i].ErrorDetails = err.Error()
+
 			// If something goes wrong on the rpc connection, reset it.
 			err = rpcCon.Reconnect()
 			if err != nil {
@@ -56,20 +60,33 @@ func ListNodesHandler(w http.ResponseWriter, r *http.Request) {
 				docker.DropLndcRpc(cli, nodes[i].Name)
 			}
 
-			logging.Error.Printf("ListNodesHandler GetBalancesFromNode error: %s", err.Error())
-			http.Error(w, err.Error(), http.StatusInternalServerError)
-			return
+			continue
 		}
 
 		if _, ok := docker.NodeAddresses[nodes[i].Name]; !ok {
 			docker.NodeAddresses[nodes[i].Name], err = docker.GetAddress(cli, nodes[i].Name)
 			if err != nil {
-				logging.Error.Printf("ListNodesHandler GetAddress error: %s", err.Error())
-				http.Error(w, err.Error(), http.StatusInternalServerError)
-				return
+				nodes[i].Error = true
+				nodes[i].ErrorDetails = err.Error()
+				continue
 			}
 		}
 		nodes[i].Address = docker.NodeAddresses[nodes[i].Name]
+		nodes[i].TrackerOK = true
+		nodes[i].TrackerIP, err = trackerLookup(nodes[i].Address)
+		if err != nil {
+			nodes[i].Error = true
+			nodes[i].ErrorDetails = err.Error()
+			nodes[i].TrackerOK = false
+			continue
+		}
+
+		nodes[i].Channels, err = litrpc.GetChannelsFromNode(rpcCon)
+		if err != nil {
+			nodes[i].Error = true
+			nodes[i].ErrorDetails = err.Error()
+			continue
+		}
 
 		for _, p := range c.Ports {
 			if p.PrivatePort == 2448 {
@@ -87,4 +104,37 @@ func ListNodesHandler(w http.ResponseWriter, r *http.Request) {
 
 	w.Header().Set("Content-Type", "application/json")
 	w.Write(js)
+}
+
+type nodeinfo struct {
+	Success bool
+	Node    struct {
+		IPv4 string
+		IPv6 string
+		Addr string
+	}
+}
+
+func trackerLookup(adr string) (string, error) {
+	var client http.Client
+
+	resp, err := client.Get(fmt.Sprintf("http://litdemotracker:46580/%s", adr))
+	if err != nil {
+		return "", err
+	}
+	defer resp.Body.Close()
+
+	decoder := json.NewDecoder(resp.Body)
+	var node nodeinfo
+	err = decoder.Decode(&node)
+	if err != nil {
+		return "", err
+	}
+
+	if !node.Success {
+		return "", fmt.Errorf("Node not found")
+	}
+
+	return node.Node.IPv4, nil
+
 }

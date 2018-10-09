@@ -8,6 +8,12 @@ import LogsPopup from './LogsPopup';
 import {Row,Col} from 'reactstrap';
 import { Table } from 'reactstrap';
 import { Button } from 'reactstrap';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
+import { faHandshake, faQrcode } from '@fortawesome/free-solid-svg-icons'
+import { faLock } from '@fortawesome/free-solid-svg-icons'
+import { faFileAlt } from '@fortawesome/free-solid-svg-icons'
+import { faSync } from '@fortawesome/free-solid-svg-icons'
+import { faTrashAlt } from '@fortawesome/free-solid-svg-icons'
 
 class App extends Component {
 
@@ -25,7 +31,9 @@ class App extends Component {
       logsPopupNodeName: '',
       qrPopupOpen: false,
       qrPopupNodeName: '',
-      qrPopupNodeUrl: ''
+      qrPopupNodeUrl: '',
+      qrPopupMode: 'pair',
+      qrPopupNodeAddress: ''
     };
 
     this.newNode = this.newNode.bind(this);
@@ -111,6 +119,18 @@ class App extends Component {
     this.setState({
       qrPopupOpen: true,
       qrPopupNodeName: node.Name,
+      qrPopupNodeAddress: node.Address,
+      qrPopupMode:'pair',
+      qrPopupNodeUrl: node.Address + '@' + window.location.hostname + ':'  + node.PublicLitPort
+    })
+  }
+
+  showNodeQrPay(node) {
+    this.setState({
+      qrPopupOpen: true,
+      qrPopupNodeName: node.Name,
+      qrPopupNodeAddress: node.Address,
+      qrPopupMode:'pay',
       qrPopupNodeUrl: node.Address + '@' + window.location.hostname + ':'  + node.PublicLitPort
     })
   }
@@ -171,16 +191,28 @@ class App extends Component {
     });
 
     var nodes = this.state.Nodes.map((n) => {
+      var balances = {};
+      balances[257] = 0;
+      balances[258] = 0;
+      balances[262] = 0;
+      n.Channels.forEach((c) => {
+        balances[c.CoinType] += c.MyBalance / 100000000;
+      });
+
       return <tr>
         <td>{n.Name}</td>
-        <td>{n.Address}</td>
+        <td>{n.Address}  <Button title="Pay this node" onClick={((e) => { this.showNodeQrPay(n); })}><FontAwesomeIcon icon={faQrcode} /></Button></td>
         <td>{window.location.hostname}:{n.PublicLitPort}</td>
+        <td><pre>{balances[257]}</pre></td>
+        <td><pre>{balances[258]}</pre></td>
+        <td><pre>{balances[262]}</pre></td>
+        <td>{n.TrackerOK ? "OK" : "Fail"}</td>
         <td>
-          <Button onClick={((e) => { this.showNodeQr(n); })}>Pair</Button>{' '}
-          <Button onClick={((e) => { this.showNodeAuth(n); })}>Auth</Button>{' '}
-          <Button onClick={((e) => { this.showNodeLogs(n); })}>Logs</Button>{' '}
-          <Button onClick={((e) => { this.restartNode(n); })}>Restart</Button>{' '}
-          <Button onClick={((e) => { this.dropNode(n); })}>Delete</Button>{' '}
+          <Button title="Pair with this node" onClick={((e) => { this.showNodeQr(n); })}><FontAwesomeIcon icon={faHandshake} /></Button>{' '}
+          <Button title="Manage authorization requests" onClick={((e) => { this.showNodeAuth(n); })}><FontAwesomeIcon icon={faLock} /></Button>{' '}
+          <Button title="Show logs of this node" onClick={((e) => { this.showNodeLogs(n); })}><FontAwesomeIcon icon={faFileAlt} /></Button>{' '}
+          <Button onClick={((e) => { this.restartNode(n); })}><FontAwesomeIcon icon={faSync} /></Button>{' '}
+          <Button onClick={((e) => { this.dropNode(n); })}><FontAwesomeIcon icon={faTrashAlt} /></Button>{' '}
         </td>
         </tr>;
     })
@@ -202,6 +234,10 @@ class App extends Component {
               <th>Name</th>
               <th>Address</th>
               <th>Endpoint</th>
+              <th>BTC</th>
+              <th>LTC</th>
+              <th>USD</th>
+              <th>Tracker</th>
               <th>&nbsp;</th>
             </tr>
           </thead>
@@ -213,7 +249,7 @@ class App extends Component {
         </Table>
 
         <AuthPopup isOpen={this.state.authPopupOpen} onClose={this.closeAuthPopup} nodeName={this.state.authPopupNodeName} />
-        <QrPopup isOpen={this.state.qrPopupOpen} onClose={this.closeQrPopup} nodeUrl={this.state.qrPopupNodeUrl} nodeName={this.state.qrPopupNodeName} />
+        <QrPopup isOpen={this.state.qrPopupOpen} onClose={this.closeQrPopup} mode={this.state.qrPopupMode} nodeAddress={this.state.qrPopupNodeAddress}  nodeUrl={this.state.qrPopupNodeUrl} nodeName={this.state.qrPopupNodeName} />
         <LogsPopup isOpen={this.state.logsPopupOpen} onClose={this.closeLogsPopup} nodeName={this.state.logsPopupNodeName} />
       </div>
     );
