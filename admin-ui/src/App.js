@@ -178,11 +178,11 @@ class App extends Component {
     let addNew = null;
     if(this.state.IsCreating) {
       creation = ( <tr>
-          <td colspan="4"><ScaleLoader /> Creating new node...</td>
+          <td colspan="8"><ScaleLoader /> Creating new node...</td>
         </tr>)
     } else {
       addNew = ( <tr>
-        <td colspan="4"><Button onClick={this.newNode}>Add new</Button></td>
+        <td colspan="8"><Button onClick={this.newNode}>Add new</Button></td>
       </tr>)
     }
 
@@ -195,9 +195,11 @@ class App extends Component {
       balances[257] = 0;
       balances[258] = 0;
       balances[262] = 0;
-      n.Channels.forEach((c) => {
-        balances[c.CoinType] += c.MyBalance / 100000000;
-      });
+      if(n.Channels !== null) {
+        n.Channels.forEach((c) => {
+          balances[c.CoinType] += c.MyBalance / 100000000;
+        });
+      }
 
       return <tr>
         <td>{n.Name}</td>
