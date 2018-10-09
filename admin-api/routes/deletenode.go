@@ -25,7 +25,7 @@ func DeleteNodeHandler(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
-	dataDir := fmt.Sprintf("/data/%s", vars["id"][9:])
+	dataDir := fmt.Sprintf("/data/%s", vars["id"][7:])
 	logging.Info.Printf("Dropping datadir %s", dataDir)
 	err = os.RemoveAll(dataDir)
 	if err != nil {
