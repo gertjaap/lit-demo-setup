@@ -4,6 +4,7 @@ import { ScaleLoader } from 'react-spinners';
 import { Navbar, NavbarBrand } from 'reactstrap';
 import AuthPopup from './AuthPopup';
 import QrPopup from './QrPopup';
+import ChannelGraphPopup from './ChannelGraphPopup';
 import LogsPopup from './LogsPopup';
 import {Row,Col} from 'reactstrap';
 import { Table } from 'reactstrap';
@@ -33,7 +34,8 @@ class App extends Component {
       qrPopupNodeName: '',
       qrPopupNodeUrl: '',
       qrPopupMode: 'pair',
-      qrPopupNodeAddress: ''
+      qrPopupNodeAddress: '',
+      channelGraphPopupOpen: false,
     };
 
     this.newNode = this.newNode.bind(this);
@@ -42,6 +44,8 @@ class App extends Component {
     this.mineBlock = this.mineBlock.bind(this);
     this.dropNode = this.dropNode.bind(this);
     this.showNodeAuth = this.showNodeAuth.bind(this);
+    this.showChannelGraph = this.showChannelGraph.bind(this);
+    this.closeChannelGraph = this.closeChannelGraph.bind(this);
     this.restartNode = this.restartNode.bind(this);
     this.closeAuthPopup = this.closeAuthPopup.bind(this);
     this.closeLogsPopup = this.closeLogsPopup.bind(this);
@@ -93,6 +97,20 @@ class App extends Component {
       authPopupNodeName: node.Name
     })
   }
+
+  showChannelGraph(node) {
+    this.setState({
+      channelGraphPopupOpen: true,
+    })
+  }
+
+
+  closeChannelGraph(node) {
+    this.setState({
+      channelGraphPopupOpen: false,
+    })
+  }
+
 
   closeAuthPopup() {
     this.setState({
@@ -187,7 +205,7 @@ class App extends Component {
     }
 
     var blockHeights = Object.keys(this.state.BlockHeights).map((k) => {
-      return <Col xs={4}><b>{k}:</b><br/><h1>{this.state.BlockHeights[k]}</h1></Col>;
+      return <Col xs={3}><b>{k}:</b><br/><h1>{this.state.BlockHeights[k]}</h1></Col>;
     });
 
     var nodes = this.state.Nodes.map((n) => {
@@ -238,6 +256,9 @@ class App extends Component {
 
         <Row>
           {blockHeights}
+          <Col xs={3}>
+            <Button onClick={this.showChannelGraph}>Channel graph</Button>
+          </Col>
         </Row>
 
         <Table striped>
@@ -262,6 +283,7 @@ class App extends Component {
 
         <AuthPopup isOpen={this.state.authPopupOpen} onClose={this.closeAuthPopup} nodeName={this.state.authPopupNodeName} />
         <QrPopup isOpen={this.state.qrPopupOpen} onClose={this.closeQrPopup} mode={this.state.qrPopupMode} nodeAddress={this.state.qrPopupNodeAddress}  nodeUrl={this.state.qrPopupNodeUrl} nodeName={this.state.qrPopupNodeName} />
+        <ChannelGraphPopup isOpen={this.state.channelGraphPopupOpen} onClose={this.closeChannelGraph} />
         <LogsPopup isOpen={this.state.logsPopupOpen} onClose={this.closeLogsPopup} nodeName={this.state.logsPopupNodeName} />
       </div>
     );

@@ -50,6 +50,7 @@ func main() {
 	}
 
 	r := mux.NewRouter()
+	r.HandleFunc("/api/nodes/graph", routes.ChannelGraphHandler)
 	r.HandleFunc("/api/nodes/list", routes.ListNodesHandler)
 	r.HandleFunc("/api/nodes/new", routes.NewNodeHandler)
 	r.HandleFunc("/api/nodes/delete/{id}", routes.DeleteNodeHandler)

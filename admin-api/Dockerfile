@@ -23,7 +23,7 @@ RUN go get -v ./...
 RUN go build
 
 FROM alpine
-RUN apk add --no-cache ca-certificates
+RUN apk add --no-cache ca-certificates graphviz font-bitstream-type1 ghostscript-fonts
 COPY --from=build /usr/local/go/src/github.com/gertjaap/lit-demo-setup/admin-api/admin-api /app/bin/admin-api
 EXPOSE 8000
 RUN mkdir /app/bin/data
