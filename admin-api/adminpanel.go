@@ -172,8 +172,6 @@ func main() {
 		}
 	}()
 
-	announcer.C <- time.Now
-
 	// CORS
 	headersOk := handlers.AllowedHeaders([]string{"X-Requested-With"})
 	originsOk := handlers.AllowedOrigins([]string{"*"})
