@@ -3,6 +3,7 @@ package routes
 import (
 	"encoding/json"
 	"net/http"
+	"time"
 
 	"github.com/docker/docker/client"
 	"github.com/gertjaap/lit-demo-setup/admin-api/docker"
@@ -33,6 +34,8 @@ func NewNodeHandler(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
+
+	nodesLastRefreshed = time.Now().Add(-30 * time.Second) // invalidate cache
 
 	js, err := json.Marshal(node)
 	if err != nil {

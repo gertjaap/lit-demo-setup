@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"net/http"
 	"os"
+	"time"
 
 	"github.com/docker/docker/client"
 	"github.com/gertjaap/lit-demo-setup/admin-api/docker"
@@ -38,6 +39,8 @@ func DeleteNodeHandler(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
+
+	nodesLastRefreshed = time.Now().Add(-30 * time.Second) // invalidate cache
 
 	w.Header().Set("Content-Type", "application/json")
 	w.Write(js)

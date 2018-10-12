@@ -33,6 +33,7 @@ import (
 var NodeAddresses = map[string]string{}
 var nodeLndcs = map[string]*litrpc.LndcRpcClient{}
 var creationMutex sync.Mutex
+var lndcMapMutex sync.Mutex
 
 func LitNodes(cli *client.Client) ([]types.Container, error) {
 	filteredContainers := []types.Container{}
@@ -260,17 +261,21 @@ func DropLndcRpc(cli *client.Client, name string) {
 }
 
 func GetLndcRpc(cli *client.Client, name string, useLitAfKey bool) (*litrpc.LndcRpcClient, error) {
+	lndcMapMutex.Lock()
 	lndc, ok := nodeLndcs[name]
 	if ok && !useLitAfKey {
+		lndcMapMutex.Unlock()
 		return lndc, nil
 	}
 	dataDir, err := GetLitNodeDataDir(cli, name)
 	if err != nil {
+		lndcMapMutex.Unlock()
 		logging.Error.Printf("Error fetching datadir for %s: %s\n", name, err.Error())
 		return nil, err
 	}
 	rootKey, err := GetRootKeyFromDataDir(dataDir)
 	if err != nil {
+		lndcMapMutex.Unlock()
 		logging.Error.Printf("Error fetching rootKey for %s: %s\n", name, err.Error())
 		return nil, err
 	}
@@ -279,12 +284,14 @@ func GetLndcRpc(cli *client.Client, name string, useLitAfKey bool) (*litrpc.Lndc
 
 	key, err := GetAdminPanelKey()
 	if err != nil {
+		lndcMapMutex.Unlock()
 		logging.Error.Printf("Error getting adminpanel key: %s\n", err.Error())
 		return nil, err
 	}
 	if useLitAfKey {
 		key, err = DeriveLitAfKey(rootKey)
 		if err != nil {
+			lndcMapMutex.Unlock()
 			logging.Error.Printf("Error deriving lit-af key: %s\n", err.Error())
 			return nil, err
 		}
@@ -298,6 +305,7 @@ func GetLndcRpc(cli *client.Client, name string, useLitAfKey bool) (*litrpc.Lndc
 			logging.Info.Printf("Error connecting to %s: %s, retrying %d more times\n", adr, err.Error(), 10-retries)
 			retries++
 			if retries > 10 {
+				lndcMapMutex.Unlock()
 				return nil, err
 			}
 		} else {
@@ -311,6 +319,7 @@ func GetLndcRpc(cli *client.Client, name string, useLitAfKey bool) (*litrpc.Lndc
 		nodeLndcs[name] = ret
 	}
 
+	lndcMapMutex.Unlock()
 	return ret, nil
 }
 
