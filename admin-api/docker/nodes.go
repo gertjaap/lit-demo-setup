@@ -356,6 +356,19 @@ func DeriveLitAfKey(rootPrivKey *hdkeychain.ExtendedKey) (*koblitz.PrivateKey, e
 }
 
 func DeriveNodePub(rootPrivKey *hdkeychain.ExtendedKey) ([33]byte, error) {
+	localIDPriv, err := DeriveNodePriv(rootPrivKey)
+	if err != nil {
+		logging.Error.Printf("NewLndcFromHostNameAndDataDir error in DerivePrivateKey %s\n", err.Error())
+		return [33]byte{}, err
+	}
+
+	var localIDPub [33]byte
+	copy(localIDPub[:], localIDPriv.PubKey().SerializeCompressed())
+
+	return localIDPub, nil
+}
+
+func DeriveNodePriv(rootPrivKey *hdkeychain.ExtendedKey) (*koblitz.PrivateKey, error) {
 	var kg portxo.KeyGen
 	kg.Depth = 5
 	kg.Step[0] = 44 | 1<<31
@@ -367,13 +380,9 @@ func DeriveNodePub(rootPrivKey *hdkeychain.ExtendedKey) ([33]byte, error) {
 	localIDPriv, err := kg.DerivePrivateKey(rootPrivKey)
 	if err != nil {
 		logging.Error.Printf("NewLndcFromHostNameAndDataDir error in DerivePrivateKey %s\n", err.Error())
-		return [33]byte{}, err
+		return nil, err
 	}
-
-	var localIDPub [33]byte
-	copy(localIDPub[:], localIDPriv.PubKey().SerializeCompressed())
-
-	return localIDPub, nil
+	return localIDPriv, nil
 }
 
 func DropLitNode(cli *client.Client, name string) error {
