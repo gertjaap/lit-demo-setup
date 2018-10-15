@@ -25,7 +25,11 @@ func NodeLogsHandler(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
-	log, err := cli.ContainerLogs(context.Background(), containerID, types.ContainerLogsOptions{Tail: "1000", ShowStdout: true, ShowStderr: true, Timestamps: false})
+	opts := types.ContainerLogsOptions{ShowStdout: true, ShowStderr: true, Timestamps: false}
+	if r.URL.Query().Get("full") != "1" {
+		opts.Tail = "1000"
+	}
+	log, err := cli.ContainerLogs(context.Background(), containerID, opts)
 	w.Header().Set("Content-Type", "text/plain")
 	_, err = stdcopy.StdCopy(w, w, log)
 	if err != nil {

@@ -43,7 +43,8 @@ class LogsPopup extends Component {
                 </div>
             </ModalBody>
             <ModalFooter>
-              <Button color="primary" onClick={this.props.onClose}>Done</Button>
+            <Button color="secondary" onClick={this.props.onFullLog}>Full Log</Button>
+            <Button color="primary" onClick={this.props.onClose}>Done</Button>
             </ModalFooter>
           </Modal>)
     }

@@ -49,6 +49,8 @@ class App extends Component {
     this.restartNode = this.restartNode.bind(this);
     this.closeAuthPopup = this.closeAuthPopup.bind(this);
     this.closeLogsPopup = this.closeLogsPopup.bind(this);
+    this.showBFNLog = this.showBFNLog.bind(this);
+    this.showFullLog = this.showFullLog.bind(this);
     this.closeQrPopup = this.closeQrPopup.bind(this);
     this.showNodeQr = this.showNodeQr.bind(this);
   }
@@ -160,6 +162,17 @@ class App extends Component {
     })
   }
 
+  showFullLog() {
+    window.open("/api/nodes/logs/" + this.state.logsPopupNodeName + "?full=1");
+    this.setState({
+      logsPopupOpen: false,
+      logsPopupNodeName: ''
+    })
+  }
+
+  showBFNLog() {
+    window.open("/api/nodes/logs/litdemobigfatnode?full=1");
+  }
 
   newNode() {
     this.setState({IsCreating:true})
@@ -258,6 +271,7 @@ class App extends Component {
           {blockHeights}
           <Col xs={3}>
             <Button onClick={this.showChannelGraph}>Channel graph</Button>
+            <Button onClick={this.showBFNLog}>BFN Log</Button>
           </Col>
         </Row>
 
@@ -284,7 +298,7 @@ class App extends Component {
         <AuthPopup isOpen={this.state.authPopupOpen} onClose={this.closeAuthPopup} nodeName={this.state.authPopupNodeName} />
         <QrPopup isOpen={this.state.qrPopupOpen} onClose={this.closeQrPopup} mode={this.state.qrPopupMode} nodeAddress={this.state.qrPopupNodeAddress}  nodeUrl={this.state.qrPopupNodeUrl} nodeName={this.state.qrPopupNodeName} />
         <ChannelGraphPopup isOpen={this.state.channelGraphPopupOpen} onClose={this.closeChannelGraph} />
-        <LogsPopup isOpen={this.state.logsPopupOpen} onClose={this.closeLogsPopup} nodeName={this.state.logsPopupNodeName} />
+        <LogsPopup isOpen={this.state.logsPopupOpen} onClose={this.closeLogsPopup} onFullLog={this.showFullLog} nodeName={this.state.logsPopupNodeName} />
       </div>
     );
   }
