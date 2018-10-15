@@ -56,6 +56,11 @@ func main() {
 		panic(err)
 	}
 
+	err = docker.UpgradeNodes(cli)
+	if err != nil {
+		panic(err)
+	}
+
 	r := mux.NewRouter()
 	r.HandleFunc("/api/nodes/graph", routes.ChannelGraphHandler)
 	r.HandleFunc("/api/nodes/list", routes.ListNodesHandler)

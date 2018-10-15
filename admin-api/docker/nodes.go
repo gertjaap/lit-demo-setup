@@ -490,3 +490,100 @@ func NewLitNode(cli *client.Client) (models.LitNode, error) {
 
 	return newNode, nil
 }
+
+func UpgradeNodes(cli *client.Client) error {
+	// Check for containers mounted to the litxx datadirectory that
+	// have an old LIT image. We'll restart them with the right image.
+	containersToUpgrade := []types.Container{}
+	containers, err := cli.ContainerList(context.Background(), types.ContainerListOptions{All: true})
+	if err != nil {
+		return err
+	}
+	knownLitImages := constants.KnownImages()
+
+	for _, c := range containers {
+		correctNetwork := false
+		for _, n := range c.NetworkSettings.Networks {
+			if n.NetworkID == NetworkID {
+				correctNetwork = true
+			}
+		}
+		if !correctNetwork {
+			continue
+		}
+		imageCorrect := false
+		for _, ki := range knownLitImages {
+			if c.ImageID == ki.ImageID {
+				imageCorrect = true
+			}
+		}
+		if imageCorrect {
+			continue
+		}
+
+		for _, m := range c.Mounts {
+			if m.Destination == "/root/.lit" {
+				containersToUpgrade = append(containersToUpgrade, c)
+			}
+		}
+
+	}
+
+	logging.Info.Printf("Updating %d containers to lit:latest\n", len(containersToUpgrade))
+	for _, c := range containersToUpgrade {
+		logging.Info.Printf("Dropping %s\n", c.Names[0][1:])
+		err := cli.ContainerRemove(context.Background(), c.ID, types.ContainerRemoveOptions{Force: true})
+		if err != nil {
+			return err
+		}
+
+		logging.Info.Printf("Recreating %s\n", c.Names[0][1:])
+
+		containerConfig := new(container.Config)
+		containerConfig.Image = constants.DefaultImage().ImageID
+		containerConfig.ExposedPorts = nat.PortSet{
+			"2448/tcp": struct{}{},
+		}
+
+		hostConfig := new(container.HostConfig)
+		for _, m := range c.Mounts {
+			if m.Destination == "/root/.lit" {
+				hostConfig.Binds = []string{fmt.Sprintf("%s:/root/.lit", m.Source)}
+			}
+		}
+
+		hostLitPort := 52000
+		for _, p := range c.Ports {
+			if p.PrivatePort == 2448 {
+				hostLitPort = int(p.PublicPort)
+			}
+		}
+
+		hostConfig.PortBindings = nat.PortMap{
+			"2448/tcp": []nat.PortBinding{
+				{
+					HostIP:   "0.0.0.0",
+					HostPort: strconv.Itoa(hostLitPort),
+				},
+			},
+		}
+
+		cbody, err := cli.ContainerCreate(context.Background(), containerConfig, hostConfig, nil, c.Names[0][1:])
+		if err != nil {
+			return err
+		}
+		err = cli.NetworkConnect(context.Background(), NetworkID, cbody.ID, nil)
+		if err != nil {
+			return err
+		}
+		err = cli.ContainerStart(context.Background(), cbody.ID, types.ContainerStartOptions{})
+		if err != nil {
+			return err
+		}
+
+		logging.Info.Printf("Completed recreation of %s\n", c.Names[0][1:])
+
+	}
+
+	return nil
+}
