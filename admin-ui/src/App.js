@@ -272,6 +272,7 @@ class App extends Component {
           <Col xs={3}>
             <Button onClick={this.showChannelGraph}>Channel graph</Button>
             <Button onClick={this.showBFNLog}>BFN Log</Button>
+            <Button onClick={this.mineBlock}>Mine</Button>
           </Col>
         </Row>
 
