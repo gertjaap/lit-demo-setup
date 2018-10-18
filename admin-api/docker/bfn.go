@@ -210,6 +210,10 @@ func ConnectAndFund(cli *client.Client, nodeName string) error {
 	if err != nil {
 		return err
 	}
+	err = coindaemons.MineBlock()
+	if err != nil {
+		return err
+	}
 
 	return nil
 }
