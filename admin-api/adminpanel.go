@@ -75,7 +75,7 @@ func main() {
 	r.HandleFunc("/api/redirecttowebui", routes.RedirectToWebUiHandler)
 	r.PathPrefix("/").Handler(http.FileServer(http.Dir("static")))
 
-	miner := time.NewTicker(30 * time.Second)
+	miner := time.NewTicker(5 * time.Minute)
 	go func() {
 		for range miner.C {
 			for _, cd := range coindaemons.CoinDaemons {
