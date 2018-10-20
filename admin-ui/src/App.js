@@ -226,12 +226,7 @@ class App extends Component {
       balances[257] = 0;
       balances[258] = 0;
       balances[262] = 0;
-      if(n.Channels !== null) {
-        n.Channels.forEach((c) => {
-          balances[c.CoinType] += c.MyBalance / 100000000;
-        });
-      }
-
+      
       var syncHeights = {};
       syncHeights[257] = 0;
       syncHeights[258] = 0;
@@ -239,6 +234,7 @@ class App extends Component {
       if(n.Balances !== null) {
         n.Balances.forEach((b) => {
           syncHeights[b.CoinType] = b.SyncHeight
+          balances[b.CoinType] = b.ChanTotal / 100000000;
         });
       }
 

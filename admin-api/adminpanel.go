@@ -177,6 +177,15 @@ func main() {
 		}
 	}()
 
+	// Refresh node data every 20 seconds
+	nodeCacher := time.NewTicker(20 * time.Second)
+	go func() {
+		for range nodeCacher.C {
+			routes.CacheNodes()
+		}
+	}()
+	routes.CacheNodes()
+
 	// CORS
 	headersOk := handlers.AllowedHeaders([]string{"X-Requested-With"})
 	originsOk := handlers.AllowedOrigins([]string{"*"})

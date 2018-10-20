@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"strings"
 	"time"
 
 	"github.com/docker/docker/api/types"
@@ -11,7 +12,6 @@ import (
 	"github.com/gertjaap/lit-demo-setup/admin-api/docker"
 	"github.com/gertjaap/lit-demo-setup/admin-api/litrpc"
 	"github.com/gertjaap/lit-demo-setup/admin-api/logging"
-
 	"github.com/gertjaap/lit-demo-setup/admin-api/models"
 )
 
@@ -19,13 +19,10 @@ var nodesLastRefreshed time.Time
 var cachedNodes []models.LitNode
 
 func GetCachedNodes() []models.LitNode {
-	if cachedNodes == nil || len(cachedNodes) == 0 {
-		cacheNodes()
-	}
 	return cachedNodes
 }
 
-func cacheNodes() error {
+func CacheNodes() error {
 	cli, err := client.NewEnvClient()
 	if err != nil {
 		return err
@@ -55,9 +52,13 @@ func cacheNodes() error {
 		}
 		nodes[i].Balances, err = litrpc.GetRawBalancesFromNode(rpcCon)
 		if err != nil {
+			logging.Error.Printf("Error while refreshing balance of %s: %s\n", nodes[i].Name, err.Error())
 			nodes[i].Error = true
 			nodes[i].ErrorDetails = err.Error()
-
+			if strings.Contains(err.Error(), "timeout") {
+				// If we receive an RPC timeout, just try it in the next run.
+				continue
+			}
 			// If something goes wrong on the rpc connection, reset it.
 			err = rpcCon.Reconnect()
 			if err != nil {
@@ -86,13 +87,6 @@ func cacheNodes() error {
 			continue
 		}
 
-		nodes[i].Channels, err = litrpc.GetChannelsFromNode(rpcCon)
-		if err != nil {
-			nodes[i].Error = true
-			nodes[i].ErrorDetails = err.Error()
-			continue
-		}
-
 		for _, p := range c.Ports {
 			if p.PrivatePort == 2448 {
 				nodes[i].PublicLitPort = int(p.PublicPort)
@@ -106,14 +100,6 @@ func cacheNodes() error {
 }
 
 func ListNodesHandler(w http.ResponseWriter, r *http.Request) {
-	if nodesLastRefreshed.Add(20 * time.Second).Before(time.Now()) { // Cache expired.
-		err := cacheNodes()
-		if err != nil {
-			logging.Error.Printf("ListNodesHandler cacheNodes error: %s", err.Error())
-			http.Error(w, err.Error(), http.StatusInternalServerError)
-			return
-		}
-	}
 
 	js, err := json.Marshal(cachedNodes)
 	if err != nil {

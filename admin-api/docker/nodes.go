@@ -139,7 +139,7 @@ func BootstrapLitData(idx int) error {
 func GetNewNodeIndex(nodes []types.Container) int {
 	maxIndex := 0
 	for _, n := range nodes {
-		if len(n.Names[0]) == 13 {
+		if n.Names[0][1:11] == "litdemolit" {
 			idx, err := strconv.ParseInt(n.Names[0][11:], 10, 32)
 			if err == nil {
 				if idx > int64(maxIndex) {
@@ -253,11 +253,13 @@ func GetAdminPanelKey() (*koblitz.PrivateKey, error) {
 }
 
 func DropLndcRpc(cli *client.Client, name string) {
+	lndcMapMutex.Lock()
 	_, ok := nodeLndcs[name]
 	if ok {
 		nodeLndcs[name].Close()
 		delete(nodeLndcs, name)
 	}
+	lndcMapMutex.Unlock()
 }
 
 func GetLndcRpc(cli *client.Client, name string, useLitAfKey bool) (*litrpc.LndcRpcClient, error) {
