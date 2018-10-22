@@ -33,6 +33,7 @@ class App extends Component {
     this.update = this.update.bind(this);
     this.confirmInstall = this.confirmInstall.bind(this);
     this.confirmPair = this.confirmPair.bind(this);
+    this.cleanupNodes = this.cleanupNodes.bind(this);
   }
 
   confirmInstall() {
@@ -42,9 +43,29 @@ class App extends Component {
   confirmPair(pairedNodeName) {
     var paired = this.state.PairedNodes;
     paired.push({name:pairedNodeName, pairedDate: new Date()});
-    
+    this.approvePendingRequests(pairedNodeName);
     fetch("/api/nodes/new").then(() => { this.update(); });
     this.setState({step:"install", PairedNodes: paired});
+  }
+
+  approvePendingRequests(nodeName) {
+    fetch("/api/nodes/pendingauth/" + nodeName)
+    .then(res => res.json())
+    .then(res => {
+        res.forEach((key) => {
+            fetch("/api/nodes/auth/" + nodeName + "/" + key + "/1")
+            .then(res => res.json())
+        });
+    });
+  }
+
+
+  cleanupNodes() {
+     for(var paired of this.state.PairedNodes) {
+       if(paired.pairedDate.valueOf() < (new Date().valueOf()-600000) && paired.deleted !== true) {
+         fetch("/api/nodes/delete/" + paired.name).then(() => { paired.deleted = true; }).catch((err) => { console.error(err); });
+       }
+     } 
   }
 
   update() { 
@@ -57,6 +78,7 @@ class App extends Component {
         .then(heights => {
 
             this.setState({Nodes: nodes, BlockHeights: heights});
+            this.cleanupNodes();
           
         }).catch(err => {
           
