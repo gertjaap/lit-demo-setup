@@ -252,7 +252,7 @@ func GetAdminPanelKey() (*koblitz.PrivateKey, error) {
 	return adminPanelKey, nil
 }
 
-func DropLndcRpc(cli *client.Client, name string) {
+func DropLndcRpc(name string) {
 	lndcMapMutex.Lock()
 	_, ok := nodeLndcs[name]
 	if ok {

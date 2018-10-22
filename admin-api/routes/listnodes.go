@@ -63,7 +63,7 @@ func CacheNodes() error {
 			err = rpcCon.Reconnect()
 			if err != nil {
 				// remove the lndc
-				docker.DropLndcRpc(cli, nodes[i].Name)
+				docker.DropLndcRpc(nodes[i].Name)
 			}
 
 			continue

@@ -40,6 +40,7 @@ func DeleteNodeHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	docker.DropLndcRpc(vars["id"])
 	nodesLastRefreshed = time.Now().Add(-30 * time.Second) // invalidate cache
 
 	w.Header().Set("Content-Type", "application/json")
