@@ -150,7 +150,7 @@ class App extends Component {
     }
     
     var mainContent = (<div>
-      <h1>Make sure you are <u>not</u> on <span style={{color:"#0000ff"}}><FontAwesomeIcon icon={faWifi} /> MIT PUBLIC</span></h1>
+      <h1>Make sure you are <u>not</u> on <span style={{color:"#0000ff"}}><FontAwesomeIcon icon={faWifi} /> MIT GUEST</span></h1>
       <br/>
       <h2>(Use <span style={{color:"#0000ff"}}><FontAwesomeIcon icon={faWifi} /> MIT</span> or <span style={{color:"#0000ff"}}><FontAwesomeIcon icon={faMobile} /> 4G / LTE</span>)</h2>
 
