@@ -12,7 +12,8 @@ import { faHandshake, faQrcode } from '@fortawesome/free-solid-svg-icons'
 import { faLock } from '@fortawesome/free-solid-svg-icons'
 import { faFileAlt } from '@fortawesome/free-solid-svg-icons'
 import { faSync } from '@fortawesome/free-solid-svg-icons'
-import { faTrashAlt } from '@fortawesome/free-solid-svg-icons'
+import { faWifi } from '@fortawesome/free-solid-svg-icons'
+import { faMobile } from '@fortawesome/free-solid-svg-icons'
 
 class App extends Component {
 
@@ -149,7 +150,12 @@ class App extends Component {
     }
     
     var mainContent = (<div>
-      <h1>To get started, install the lit mobile app:</h1>
+      <h1>Make sure you are <u>not</u> on <span style={{color:"#0000ff"}}><FontAwesomeIcon icon={faWifi} /> MIT PUBLIC</span></h1>
+      <br/>
+      <h2>(Use <span style={{color:"#0000ff"}}><FontAwesomeIcon icon={faWifi} /> MIT</span> or <span style={{color:"#0000ff"}}><FontAwesomeIcon icon={faMobile} /> 4G / LTE</span>)</h2>
+
+      <br/>
+      <h2>Then, install the lit mobile app:</h2>
           
           <Row>
             <Col xs={1}>&nbsp;</Col>
